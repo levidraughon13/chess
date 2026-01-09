@@ -1,0 +1,4 @@
+
+
+# some notes for chess :)
+
