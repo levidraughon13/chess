@@ -45,4 +45,9 @@ public class ChessMove {
 
         return promotionPiece;
     }
+
+    @Override
+    public String toString() {
+        return String.format("%s%s", startPosition, endPosition);
+    }
 }
