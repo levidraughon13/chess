@@ -47,37 +47,33 @@ public class PieceMovesCalculator {
         boolean q3 = true;
         boolean q4 = true;
         int shift = 1;
-        List<ChessPosition> validSquares = new ArrayList<>();
+        Collection<ChessMove> moves = new ArrayList<>();
         while (shift < 7 && (q1 || q2 || q3 || q4)){
             if (q1){
                 ChessPosition next = new ChessPosition(this.currentRow-shift, this.currentCol-shift);
                 List<Boolean> result = checkValidSquare(next);
-                if (result.getFirst()) { validSquares.add(next); }
+                if (result.getFirst()) { moves.add(new ChessMove(this.myPosition, next, null)); }
                 if (result.get(1)) { q1 = false; }
             }
             if (q2){
                 ChessPosition next = new ChessPosition(this.currentRow-shift, this.currentCol+shift);
                 List<Boolean> result = checkValidSquare(next);
-                if (result.getFirst()) { validSquares.add(next); }
+                if (result.getFirst()) { moves.add(new ChessMove(this.myPosition, next, null)); }
                 if (result.get(1)) { q2 = false; }
             }
             if (q3){
                 ChessPosition next = new ChessPosition(this.currentRow+shift, this.currentCol-shift);
                 List<Boolean> result = checkValidSquare(next);
-                if (result.getFirst()) { validSquares.add(next); }
+                if (result.getFirst()) { moves.add(new ChessMove(this.myPosition, next, null)); }
                 if (result.get(1)) { q3 = false; }
             }
             if (q4){
                 ChessPosition next = new ChessPosition(this.currentRow+shift, this.currentCol+shift);
                 List<Boolean> result = checkValidSquare(next);
-                if (result.getFirst()) { validSquares.add(next); }
+                if (result.getFirst()) { moves.add(new ChessMove(this.myPosition, next, null)); }
                 if (result.get(1)) { q4 = false; }
             }
             shift ++;
-        }
-        Collection<ChessMove> moves = new ArrayList<>();
-        for (ChessPosition position : validSquares){
-            moves.add(new ChessMove(myPosition, position, null));
         }
         return moves;
     }
@@ -88,38 +84,35 @@ public class PieceMovesCalculator {
         boolean left = true;
         boolean right = true;
         int shift = 1;
-        List<ChessPosition> validSquares = new ArrayList<>();
+        Collection<ChessMove> moves = new ArrayList<>();
         while (shift < 7 && (up || down || left || right)){
             if (up){
                 ChessPosition next = new ChessPosition(this.currentRow+shift, this.currentCol);
                 List<Boolean> result = checkValidSquare(next);
-                if (result.getFirst()) { validSquares.add(next); }
+                if (result.getFirst()) { moves.add(new ChessMove(this.myPosition, next, null)); }
                 if (result.get(1)) { up = false; }
             }
             if (down){
                 ChessPosition next = new ChessPosition(this.currentRow-shift, this.currentCol);
                 List<Boolean> result = checkValidSquare(next);
-                if (result.getFirst()) { validSquares.add(next); }
+                if (result.getFirst()) { moves.add(new ChessMove(this.myPosition, next, null)); }
                 if (result.get(1)) { down = false; }
             }
             if (left){
                 ChessPosition next = new ChessPosition(this.currentRow, this.currentCol-shift);
                 List<Boolean> result = checkValidSquare(next);
-                if (result.getFirst()) { validSquares.add(next); }
+                if (result.getFirst()) { moves.add(new ChessMove(this.myPosition, next, null)); }
                 if (result.get(1)) { left = false; }
             }
             if (right){
                 ChessPosition next = new ChessPosition(this.currentRow, this.currentCol+shift);
                 List<Boolean> result = checkValidSquare(next);
-                if (result.getFirst()) { validSquares.add(next); }
+                if (result.getFirst()) { moves.add(new ChessMove(this.myPosition, next, null)); }
                 if (result.get(1)) { right = false; }
             }
             shift ++;
         }
-        Collection<ChessMove> moves = new ArrayList<>();
-        for (ChessPosition position : validSquares){
-            moves.add(new ChessMove(myPosition, position, null));
-        }
+
         return moves;
     }
 }
