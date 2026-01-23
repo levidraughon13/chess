@@ -59,6 +59,8 @@ public class ChessPiece {
             return new BishopMovesCalculator(board, myPosition).pieceMoves();
         } else if (this.getPieceType() == PieceType.ROOK) {
             return new RookMovesCalculator(board, myPosition).pieceMoves();
+        } else if (this.getPieceType() == PieceType.QUEEN) {
+            return new QueenMovesCalculator(board, myPosition).pieceMoves();
         }
         return List.of();
         /*throw new RuntimeException("Not implemented");*/
