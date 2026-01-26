@@ -13,6 +13,7 @@ public class PawnMovesCalculator extends PieceMovesCalculator {
     public Collection<ChessMove> pieceMoves() {
         Collection<ChessMove> moves = new ArrayList<>();
 
+        //checks if pawn at end of board
         if (this.piece.getTeamColor() == ChessGame.TeamColor.WHITE) {
             if (this.myPosition.getRow() == 8) { return moves; }
         } else {
@@ -21,10 +22,9 @@ public class PawnMovesCalculator extends PieceMovesCalculator {
 
         List<ChessPosition> squares = getMovePositions();
 
-
-
-        List<Boolean> result = this.checkValidSquare(squares.getFirst());
+        // cases for moving forward one space and moving forward two spacs if in starting position
         if (this.board.getPiece(squares.getFirst()) == null) {
+            List<Boolean> result = this.checkValidSquare(squares.getFirst());
             if (result.getFirst()){
                 moves.addAll(getPromotionMoves(squares.getFirst()));
                 if (this.piece.getTeamColor() == ChessGame.TeamColor.WHITE){
@@ -43,6 +43,7 @@ public class PawnMovesCalculator extends PieceMovesCalculator {
             }
         }
 
+        //cases for capture pieces
         if (this.currentCol != 8) {
             if (this.board.getPiece(squares.get(1)) != null) {
                 if (this.board.getPiece(squares.get(1)).getTeamColor() != this.piece.getTeamColor()) {
@@ -61,6 +62,10 @@ public class PawnMovesCalculator extends PieceMovesCalculator {
         return moves;
     }
 
+    /**
+     * @return a boolean to know whether the pawn can promote or not
+     * given the space it's moving to
+     */
     public Boolean checkPromotable(ChessPosition square) {
         if (this.piece.getTeamColor() == ChessGame.TeamColor.WHITE) {
             return square.getRow() == 8;
@@ -69,6 +74,9 @@ public class PawnMovesCalculator extends PieceMovesCalculator {
         }
     }
 
+    /**
+     * @return a collection of moves to a given space with all types of promotion pieces
+     */
     public Collection<ChessMove> getPromotionMoves (ChessPosition square) {
         Collection<ChessMove> moves = new ArrayList<>();
         if (this.checkPromotable(square)) {
@@ -82,6 +90,10 @@ public class PawnMovesCalculator extends PieceMovesCalculator {
         return moves;
     }
 
+    /**
+     * @return possible spaces this pawn could move to depending
+     * on its color
+     */
     private List<ChessPosition> getMovePositions() {
         if (this.piece.getTeamColor() == ChessGame.TeamColor.WHITE){
             ChessPosition sq1 = new ChessPosition(this.currentRow+1, this.currentCol);
