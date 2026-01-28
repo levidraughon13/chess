@@ -1,6 +1,5 @@
 package chess;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -12,14 +11,7 @@ public class KnightMovesCalculator extends PieceMovesCalculator {
     @Override
     public Collection<ChessMove> pieceMoves() {
         List<ChessPosition> squares = getMovePositions();
-        Collection<ChessMove> moves = new ArrayList<>();
-        for (ChessPosition position: squares) {
-            List<Boolean> result = this.checkValidSquare(position);
-            if (result.getFirst()){
-                moves.add(new ChessMove(this.myPosition, position, null));
-            }
-        }
-        return moves;
+        return eightMoveOptions(squares);
     }
 
     private List<ChessPosition> getMovePositions() {

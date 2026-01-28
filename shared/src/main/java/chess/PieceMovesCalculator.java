@@ -78,6 +78,17 @@ public class PieceMovesCalculator {
         return moves;
     }
 
+    public Collection<ChessMove> eightMoveOptions(List<ChessPosition> squares){
+        Collection<ChessMove> moves = new ArrayList<>();
+        for (ChessPosition position: squares) {
+            List<Boolean> result = this.checkValidSquare(position);
+            if (result.getFirst()){
+                moves.add(new ChessMove(this.myPosition, position, null));
+            }
+        }
+        return moves;
+    }
+
     public Collection<ChessMove> orthogonalMoves(){
         boolean up = true;
         boolean down = true;
