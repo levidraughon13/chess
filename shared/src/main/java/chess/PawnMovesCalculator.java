@@ -26,11 +26,7 @@ public class PawnMovesCalculator extends PieceMovesCalculator {
         }
         if (result2.getFirst() && !(result2.get(1))){
             moves.addAll(getPromotionMoves(squares.get(2)));
-            if (piece.getTeamColor() == ChessGame.TeamColor.WHITE && currentRow == 2){
-                if (result3.getFirst() && !(result3.get(1))){
-                    moves.add(new ChessMove(myPosition, squares.get(3), null));
-                }
-            } else if (piece.getTeamColor() == ChessGame.TeamColor.BLACK && currentRow == 7){
+            if (inStartPosition()){
                 if (result3.getFirst() && !(result3.get(1))){
                     moves.add(new ChessMove(myPosition, squares.get(3), null));
                 }
@@ -39,6 +35,12 @@ public class PawnMovesCalculator extends PieceMovesCalculator {
         return moves;
     }
 
+    public Boolean inStartPosition(){
+        if (piece.getTeamColor() == ChessGame.TeamColor.WHITE){
+            return currentRow == 2;
+        }
+        return currentRow == 7;
+    }
 
     /**
      * @return a boolean to know whether the pawn can promote or not
