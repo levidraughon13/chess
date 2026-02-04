@@ -1,7 +1,6 @@
 package chess;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Objects;
 
@@ -61,12 +60,12 @@ public class ChessGame {
             ChessBoard copy = board.clone();
             Collection<ChessMove> copyMoves = new ArrayList<>(moves);
             for (ChessMove move : copyMoves) {
-                board.addPiece(move.getEndPosition(), copy.getPiece(startPosition));
-                board.addPiece(startPosition, null);
+                this.board.addPiece(move.getEndPosition(), copy.getPiece(startPosition));
+                this.board.addPiece(startPosition, null);
                 if (isInCheck(getTeamTurn())) {
                     moves.remove(move);
                 }
-                this.board = copy;
+                this.board = copy.clone();
             }
         } catch (CloneNotSupportedException e){
             throw new RuntimeException("Cloning Error", e);
@@ -109,7 +108,7 @@ public class ChessGame {
         Collection<ChessPosition> opponentPositions = teamPositions(opponent);
 
         for (ChessPosition position : opponentPositions) {
-            threats.addAll(board.getPiece(position).pieceMoves(board, position));
+            threats.addAll(getBoard().getPiece(position).pieceMoves(getBoard(), position));
         }
 
         for (ChessMove move : threats){
