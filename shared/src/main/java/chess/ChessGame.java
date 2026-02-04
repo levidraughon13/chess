@@ -1,6 +1,8 @@
 package chess;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -54,6 +56,22 @@ public class ChessGame {
      */
     public Collection<ChessMove> validMoves(ChessPosition startPosition) {
         Collection<ChessMove> moves = board.getPiece(startPosition).pieceMoves(this.board,startPosition);
+        try{
+            ChessBoard copy = board.clone();
+            if (isInCheck(getTeamTurn())) {
+                for (ChessMove move : moves) {
+                    board.addPiece(move.getEndPosition(), copy.getPiece(startPosition));
+                    board.addPiece(startPosition, null);
+                    if (isInCheck(getTeamTurn())) {
+                        moves.remove(move);
+                    }
+                    this.board = copy;
+                }
+            }
+        } catch (CloneNotSupportedException e){
+            throw new RuntimeException("Cloning Error", e);
+        }
+
 
 
         return moves;
@@ -66,7 +84,7 @@ public class ChessGame {
      * @throws InvalidMoveException if move is invalid
      */
     public void makeMove(ChessMove move) throws InvalidMoveException {
-        throw new RuntimeException("Not implemented");
+
     }
 
     /**
@@ -76,7 +94,27 @@ public class ChessGame {
      * @return True if the specified team is in check
      */
     public boolean isInCheck(TeamColor teamColor) {
-        throw new RuntimeException("Not implemented");
+        ChessPosition kingSpot= null;
+        Collection<ChessMove> threats = new ArrayList<>();
+        for (int i = 0; i < 8; i++){
+            for (int j = 0; j < 8; j++){
+                ChessPiece piece = this.board.board[i][j];
+                if (piece.getTeamColor() == teamColor && piece.getPieceType() == ChessPiece.PieceType.KING){
+                    kingSpot = new ChessPosition(i+1, j+1);
+                }
+                if (piece.getTeamColor() != null && piece.getTeamColor() != teamColor){
+                    threats.addAll(piece.pieceMoves(board, new ChessPosition(i+1, j+1)));
+                }
+            }
+        }
+
+        for (ChessMove move : threats){
+            if (move.getEndPosition().equals(kingSpot)){
+                return true;
+            }
+        }
+        return false;
+
     }
 
     /**
@@ -116,7 +154,7 @@ public class ChessGame {
      * @return the chessboard
      */
     public ChessBoard getBoard() {
-        throw new RuntimeException("Not implemented");
+        return this.board;
     }
 
 }
