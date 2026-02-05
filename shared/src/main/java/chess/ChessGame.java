@@ -55,7 +55,7 @@ public class ChessGame {
      */
     public Collection<ChessMove> validMoves(ChessPosition startPosition) {
         Collection<ChessMove> moves = board.getPiece(startPosition).pieceMoves(this.board,startPosition);
-        setTeamTurn(board.getPiece(startPosition).getTeamColor());
+        //setTeamTurn(board.getPiece(startPosition).getTeamColor());
         try{
             ChessBoard copy = board.clone();
             Collection<ChessMove> copyMoves = new ArrayList<>(moves);
@@ -82,12 +82,20 @@ public class ChessGame {
      */
     public void makeMove(ChessMove move) throws InvalidMoveException {
         Collection<ChessMove> valid = validMoves(move.getStartPosition());
+        if (board.getPiece(move.getStartPosition()).getTeamColor() != getTeamTurn()) {
+            throw new InvalidMoveException();
+        }
         if (!(valid.contains(move))){
             throw new InvalidMoveException();
         }
         if (isInCheckmate(getTeamTurn())){ return; }
 
-        board.addPiece(move.getEndPosition(), board.getPiece(move.getStartPosition()));
+        if (move.getPromotionPiece() == null){
+            board.addPiece(move.getEndPosition(), board.getPiece(move.getStartPosition()));
+        } else {
+            board.addPiece(move.getEndPosition(), new ChessPiece(teamTurn, move.getPromotionPiece()));
+        }
+
         board.addPiece(move.getStartPosition(), null);
         if (teamTurn == TeamColor.WHITE){ setTeamTurn(TeamColor.BLACK); }
         else if (teamTurn == TeamColor.BLACK){ setTeamTurn(TeamColor.WHITE); }
