@@ -55,7 +55,7 @@ public class ChessGame {
      */
     public Collection<ChessMove> validMoves(ChessPosition startPosition) {
         Collection<ChessMove> moves = board.getPiece(startPosition).pieceMoves(this.board,startPosition);
-        //setTeamTurn(board.getPiece(startPosition).getTeamColor());
+        setTeamTurn(board.getPiece(startPosition).getTeamColor());
         try{
             ChessBoard copy = board.clone();
             Collection<ChessMove> copyMoves = new ArrayList<>(moves);
@@ -81,10 +81,10 @@ public class ChessGame {
      * @throws InvalidMoveException if move is invalid
      */
     public void makeMove(ChessMove move) throws InvalidMoveException {
-        Collection<ChessMove> valid = validMoves(move.getStartPosition());
-        if (board.getPiece(move.getStartPosition()).getTeamColor() != getTeamTurn()) {
+        if (board.getPiece(move.getStartPosition()) == null || board.getPiece(move.getStartPosition()).getTeamColor() != getTeamTurn()) {
             throw new InvalidMoveException();
         }
+        Collection<ChessMove> valid = validMoves(move.getStartPosition());
         if (!(valid.contains(move))){
             throw new InvalidMoveException();
         }

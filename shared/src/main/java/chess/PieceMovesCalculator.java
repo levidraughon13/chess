@@ -48,7 +48,7 @@ public class PieceMovesCalculator {
         boolean q4 = true;
         int shift = 1;
         Collection<ChessMove> moves = new ArrayList<>();
-        while (shift < 7 && (q1 || q2 || q3 || q4)){
+        while (shift <= 7 && (q1 || q2 || q3 || q4)){
             if (q1){
                 ChessPosition next = new ChessPosition(this.currentRow-shift, this.currentCol-shift);
                 List<Boolean> result = checkValidSquare(next);
@@ -96,7 +96,7 @@ public class PieceMovesCalculator {
         boolean right = true;
         int shift = 1;
         Collection<ChessMove> moves = new ArrayList<>();
-        while (shift < 7 && (up || down || left || right)){
+        while (shift <= 7 && (up || down || left || right)){
             if (up){
                 ChessPosition next = new ChessPosition(this.currentRow+shift, this.currentCol);
                 List<Boolean> result = checkValidSquare(next);
