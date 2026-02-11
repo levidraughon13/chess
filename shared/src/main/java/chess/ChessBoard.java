@@ -67,16 +67,6 @@ public class ChessBoard implements Cloneable{
         this.addPiece(new ChessPosition(8,8),new ChessPiece(ChessGame.TeamColor.BLACK, ChessPiece.PieceType.ROOK));
     }
 
-    public ChessBoard deepCopy(){
-        ChessBoard copy = new ChessBoard();
-        ChessPiece[][] boardCopy = new ChessPiece[8][8];
-        for (int i = 0; i < 8; i++) {
-            boardCopy[i] = Arrays.copyOf(board[i], 8);
-        }
-        copy.board = boardCopy;
-        return copy;
-    }
-
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) {
