@@ -1,7 +1,9 @@
 package server;
 
+import dataaccess.UserDAO;
 import io.javalin.*;
 import io.javalin.http.Context;
+import model.*;
 import request.RegisterRequest;
 import result.RegisterResult;
 import service.UserService;
@@ -25,7 +27,8 @@ public class Server {
     }
 
     private void addUser(Context ctx){
-        RegisterResult result = UserService.register(ctx.bodyAsClass(RegisterRequest.class));
+        UserService service = new UserService();
+        RegisterResult result = service.register(ctx.bodyAsClass(RegisterRequest.class));
         ctx.contentType("application/json");
         ctx.json(result);
     }

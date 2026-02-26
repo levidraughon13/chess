@@ -6,8 +6,14 @@ import result.*;
 import dataaccess.*;
 
 public class UserService {
-    public static RegisterResult register(RegisterRequest registerRequest) {
-        UserData user = UserDAO.getUser(registerRequest.username());
+    private final UserDAO users;
+    public UserService(){
+        this.users = new UserDAO();
+    }
+
+    public RegisterResult register(RegisterRequest registerRequest) {
+        UserData user = users.getUser(registerRequest.username());
+        AuthData authData = users.createUser(registerRequest.username(), registerRequest.password(), registerRequest.email());
         throw new RuntimeException("Not implemented");
     }
     public LoginResult login(LoginRequest loginRequest) {
