@@ -1,14 +1,18 @@
 package dataaccess;
 
-import model.AuthData;
 import model.UserData;
+import java.util.HashMap;
 
 public class MemoryUserDAO implements UserDAO {
-    public UserData getUser(String username) {
+    private final HashMap<String, UserData> users = new HashMap<>();
 
-        throw new RuntimeException("Not implemented");
+    public UserData getUser(String username) {
+        return users.get(username);
     }
-    public AuthData createUser(String username, String password, String email) {
-        throw new RuntimeException("Not implemented");
+    public void createUser(String username, String password, String email) {
+        users.put(username, new UserData(username, password, email));
+    }
+    public void clearUsers(){
+        users.clear();
     }
 }
