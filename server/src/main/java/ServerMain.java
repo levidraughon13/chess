@@ -1,6 +1,8 @@
 import chess.*;
 import dataaccess.*;
 import server.Server;
+import service.AuthService;
+import service.GameService;
 import service.UserService;
 
 public class ServerMain {
@@ -12,8 +14,7 @@ public class ServerMain {
         if (args.length >= 1) {
             port = Integer.parseInt(args[0]);
         }
-
-        Server server = new Server(new UserService(UserDataAccess, AuthDataAccess));
+        Server server = new Server(UserDataAccess, AuthDataAccess, GameDataAccess);
         server.run(port);
         System.out.println("♕ 240 Chess Server");
     }
