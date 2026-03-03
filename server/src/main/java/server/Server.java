@@ -36,9 +36,6 @@ public class Server {
         javalin.put("/game", this::joinGame);
         javalin.delete("/db", this::clear);
 
-        // Register your endpoints and exception handlers here.
-
-
     }
 
     public int run(int desiredPort) {
@@ -54,15 +51,9 @@ public class Server {
             ctx.status(200);
             ctx.result(new Gson().toJson(result));
         } catch (BadRequestException e){
-            Response error = new Response(e.getMessage());
-            ctx.contentType("application/json");
-            ctx.status(400);
-            ctx.result(new Gson().toJson(error));
+            badRequest(ctx, e.getMessage());
         } catch (DataAccessException e) {
-            Response error = new Response(e.getMessage());
-            ctx.contentType("application/json");
-            ctx.status(403);
-            ctx.result(new Gson().toJson(error));
+            other(ctx, e.getMessage());
         }
     }
 
@@ -74,15 +65,9 @@ public class Server {
             ctx.status(200);
             ctx.result(new Gson().toJson(result));
         } catch (BadRequestException e){
-            Response error = new Response(e.getMessage());
-            ctx.contentType("application/json");
-            ctx.status(400);
-            ctx.result(new Gson().toJson(error));
+            badRequest(ctx, e.getMessage());
         } catch (UnauthorizedException e) {
-            Response error = new Response(e.getMessage());
-            ctx.contentType("application/json");
-            ctx.status(401);
-            ctx.result(new Gson().toJson(error));
+            unauthoried(ctx, e.getMessage());
         }
     }
 
@@ -93,10 +78,7 @@ public class Server {
             ctx.status(200);
             ctx.result();
         } catch (UnauthorizedException e) {
-            Response error = new Response(e.getMessage());
-            ctx.contentType("application/json");
-            ctx.status(401);
-            ctx.result(new Gson().toJson(error));
+            unauthoried(ctx, e.getMessage());
         }
     }
 
@@ -108,9 +90,7 @@ public class Server {
             ctx.status(200);
             ctx.result(new Gson().toJson(games));
         } catch (UnauthorizedException e) {
-            Response error = new Response(e.getMessage());
-            ctx.status(401);
-            ctx.result(new Gson().toJson(error));
+            unauthoried(ctx, e.getMessage());
         }
     }
 
@@ -121,14 +101,9 @@ public class Server {
             ctx.status(200);
             ctx.result(new Gson().toJson(result));
         } catch (UnauthorizedException e) {
-            Response error = new Response(e.getMessage());
-            ctx.status(401);
-            ctx.result(new Gson().toJson(error));
+            unauthoried(ctx, e.getMessage());
         } catch (BadRequestException e) {
-            Response error = new Response(e.getMessage());
-            ctx.contentType("application/json");
-            ctx.status(400);
-            ctx.result(new Gson().toJson(error));
+            badRequest(ctx, e.getMessage());
         }
 
 
@@ -141,20 +116,11 @@ public class Server {
             ctx.status(200);
             ctx.result();
         } catch (BadRequestException e) {
-            Response error = new Response(e.getMessage());
-            ctx.contentType("application/json");
-            ctx.status(400);
-            ctx.result(new Gson().toJson(error));
+            badRequest(ctx, e.getMessage());
         } catch (UnauthorizedException e) {
-            Response error = new Response(e.getMessage());
-            ctx.contentType("application/json");
-            ctx.status(401);
-            ctx.result(new Gson().toJson(error));
+            unauthoried(ctx, e.getMessage());
         } catch (DataAccessException e) {
-            Response error = new Response(e.getMessage());
-            ctx.contentType("application/json");
-            ctx.status(403);
-            ctx.result(new Gson().toJson(error));
+            other(ctx, e.getMessage());
         }
     }
 
@@ -170,4 +136,24 @@ public class Server {
         javalin.stop();
     }
 
+    private void badRequest(Context ctx, String e) {
+        Response error = new Response(e);
+        ctx.contentType("application/json");
+        ctx.status(400);
+        ctx.result(new Gson().toJson(error));
+    }
+
+    private void unauthoried(Context ctx, String e){
+        Response error = new Response(e);
+        ctx.contentType("application/json");
+        ctx.status(401);
+        ctx.result(new Gson().toJson(error));
+    }
+
+    private void other(Context ctx, String e){
+        Response error = new Response(e);
+        ctx.contentType("application/json");
+        ctx.status(403);
+        ctx.result(new Gson().toJson(error));
+    }
 }
