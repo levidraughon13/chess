@@ -17,7 +17,10 @@ public class MemoryAuthDAO implements AuthDAO{
         authData.put(authToken, new AuthData(authToken, username));
         return authToken;
     }
-    public void deleteAuth(String authToken){
+    public void deleteAuth(String authToken) throws UnauthorizedException {
+        if (authData.get(authToken) == null) {
+            throw new UnauthorizedException("Error: unauthorized");
+        }
         authData.remove(authToken);
     }
     public void clearAuths() {
