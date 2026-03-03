@@ -18,7 +18,7 @@ public interface GameDAO {
         throw new RuntimeException("Not implemented");
     }
 
-    public default GameData getGame(Integer gameID){
+    public default GameData getGame(Integer gameID) throws BadRequestException {
         throw new RuntimeException("Not implemented");
     }
 

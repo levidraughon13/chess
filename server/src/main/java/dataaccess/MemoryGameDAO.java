@@ -17,7 +17,7 @@ public class MemoryGameDAO implements GameDAO{
     public int createGame(String gameName) {
         int newID = idCount + 1;
         idCount++;
-        games.put(newID, new GameData(newID, "", "", gameName, new ChessGame()));
+        games.put(newID, new GameData(newID, null, null, gameName, new ChessGame()));
         return newID;
     }
 
@@ -27,9 +27,6 @@ public class MemoryGameDAO implements GameDAO{
 
     public void joinGame(Integer gameID, String username, String team) throws BadRequestException {
         GameData game = getGame(gameID);
-        if (Objects.equals(game.whiteUsername(), username) | Objects.equals(game.whiteUsername(), username)){
-            throw new BadRequestException("Error: bad request, already in game");
-        }
         if (Objects.equals(team, "WHITE")){
             games.replace(gameID, new GameData(gameID, username, game.blackUsername(), game.gameName(), game.game()));
         } else if (Objects.equals(team, "BLACK")){
@@ -37,10 +34,13 @@ public class MemoryGameDAO implements GameDAO{
         } else {
             throw new BadRequestException("Error: bad request, invalid team color");
         }
-
+        game = getGame(gameID);
     }
 
-    public GameData getGame(Integer gameID){
+    public GameData getGame(Integer gameID) throws BadRequestException {
+        if (games.get(gameID) == null){
+            throw new BadRequestException("Error: bad request");
+        }
         return games.get(gameID);
     }
 

@@ -17,4 +17,6 @@ public interface AuthDAO {
     public default void clearAuths() {
         throw new RuntimeException("Not implemented");
     }
+
+    String createAuth(String username);
 }

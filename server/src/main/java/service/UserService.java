@@ -29,8 +29,7 @@ public class UserService extends Service{
         }
         userDataAccess.createUser(registerRequest.username(), registerRequest.password(), registerRequest.email());
         user = userDataAccess.getUser(registerRequest.username());
-        String authToken = generateToken();
-        authDataAccess.createAuth(authToken, user.username());
+        String authToken = authDataAccess.createAuth(user.username());
         return new RegisterResult(user.username(), authToken);
     }
     public LoginResult login(LoginRequest loginRequest) throws BadRequestException, UnauthorizedException {
@@ -44,8 +43,8 @@ public class UserService extends Service{
             throw new UnauthorizedException("Error: unauthorized, incorrect password");
         }
 
-        String authToken = generateToken();
-        authDataAccess.createAuth(authToken, user.username());
+
+        String authToken = authDataAccess.createAuth(user.username());
         return new LoginResult(user.username(), authToken);
     }
 

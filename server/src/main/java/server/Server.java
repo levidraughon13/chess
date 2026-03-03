@@ -140,10 +140,20 @@ public class Server {
             gameService.joinGame(new Gson().fromJson(ctx.body(), JoinRequest.class), authToken);
             ctx.status(200);
             ctx.result();
-        } catch (DataAccessException e) {
+        } catch (BadRequestException e) {
             Response error = new Response(e.getMessage());
             ctx.contentType("application/json");
             ctx.status(400);
+            ctx.result(new Gson().toJson(error));
+        } catch (UnauthorizedException e) {
+            Response error = new Response(e.getMessage());
+            ctx.contentType("application/json");
+            ctx.status(401);
+            ctx.result(new Gson().toJson(error));
+        } catch (DataAccessException e) {
+            Response error = new Response(e.getMessage());
+            ctx.contentType("application/json");
+            ctx.status(403);
             ctx.result(new Gson().toJson(error));
         }
     }
