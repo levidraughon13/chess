@@ -6,23 +6,13 @@ import java.util.HashMap;
 
 public interface GameDAO {
 
-    public default int createGame(String gameName) {
-        throw new RuntimeException("Not implemented");
-    }
+    int createGame(String gameName);
 
-    public default HashMap<Integer, GameData> listGames() {
-        throw new RuntimeException("Not implemented");
-    }
+    HashMap<Integer, GameData> listGames();
 
-    public default void joinGame(Integer gameID, String username, String team) throws BadRequestException {
-        throw new RuntimeException("Not implemented");
-    }
+    void joinGame(Integer gameID, String username, String team) throws BadRequestException;
 
-    public default GameData getGame(Integer gameID) throws BadRequestException {
-        throw new RuntimeException("Not implemented");
-    }
+    GameData getGame(Integer gameID) throws BadRequestException;
 
-    public default void clearGames() {
-        throw new RuntimeException("Not implemented");
-    }
+    void clearGames();
 }

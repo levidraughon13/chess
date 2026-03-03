@@ -6,7 +6,6 @@ import result.*;
 import dataaccess.*;
 
 import java.util.Objects;
-import java.util.UUID;
 
 public class UserService extends Service{
     private final UserDAO userDataAccess;

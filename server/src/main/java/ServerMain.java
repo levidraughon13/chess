@@ -1,9 +1,6 @@
 import chess.*;
 import dataaccess.*;
 import server.Server;
-import service.AuthService;
-import service.GameService;
-import service.UserService;
 
 public class ServerMain {
     public static void main(String[] args) {

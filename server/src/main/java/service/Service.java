@@ -1,12 +1,8 @@
 package service;
 
 import dataaccess.AuthDAO;
-import dataaccess.GameDAO;
 import dataaccess.UnauthorizedException;
-import dataaccess.UserDAO;
 import model.AuthData;
-
-import java.util.UUID;
 
 public class Service {
 
@@ -17,9 +13,5 @@ public class Service {
             throw new UnauthorizedException("Error: unauthorized");
         }
         return data;
-    }
-
-    public static String generateToken() {
-        return UUID.randomUUID().toString();
     }
 }

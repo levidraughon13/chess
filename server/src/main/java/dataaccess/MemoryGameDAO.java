@@ -34,7 +34,6 @@ public class MemoryGameDAO implements GameDAO{
         } else {
             throw new BadRequestException("Error: bad request, invalid team color");
         }
-        game = getGame(gameID);
     }
 
     public GameData getGame(Integer gameID) throws BadRequestException {
