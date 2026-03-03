@@ -2,9 +2,9 @@ package dataaccess;
 
 import chess.ChessGame;
 import model.GameData;
-import model.UserData;
 
 import java.util.HashMap;
+import java.util.Objects;
 
 public class MemoryGameDAO implements GameDAO{
     private final HashMap<Integer, GameData> games = new HashMap<>();
@@ -14,15 +14,37 @@ public class MemoryGameDAO implements GameDAO{
         idCount = 0;
     }
 
-    public HashMap<Integer, GameData> listGames(Integer id) {
-        return games;
-    }
-    public void createUser(String whiteUser, String blackUser, String gameName, ChessGame game) {
+    public int createGame(String gameName) {
         int newID = idCount + 1;
         idCount++;
-        games.put(newID, new GameData(newID, whiteUser, blackUser, gameName, game));
+        games.put(newID, new GameData(newID, "", "", gameName, new ChessGame()));
+        return newID;
     }
-    public void clearUsers(){
+
+    public HashMap<Integer, GameData> listGames() {
+        return games;
+    }
+
+    public void joinGame(Integer gameID, String username, String team) throws BadRequestException {
+        GameData game = getGame(gameID);
+        if (Objects.equals(game.whiteUsername(), username) | Objects.equals(game.whiteUsername(), username)){
+            throw new BadRequestException("Error: bad request, already in game");
+        }
+        if (Objects.equals(team, "WHITE")){
+            games.replace(gameID, new GameData(gameID, username, game.blackUsername(), game.gameName(), game.game()));
+        } else if (Objects.equals(team, "BLACK")){
+            games.replace(gameID, new GameData(gameID, game.whiteUsername(), username, game.gameName(), game.game()));
+        } else {
+            throw new BadRequestException("Error: bad request, invalid team color");
+        }
+
+    }
+
+    public GameData getGame(Integer gameID){
+        return games.get(gameID);
+    }
+
+    public void clearGames(){
         games.clear();
     }
 }
