@@ -67,7 +67,7 @@ public class Server {
         } catch (BadRequestException e){
             badRequest(ctx, e.getMessage());
         } catch (UnauthorizedException e) {
-            unauthoried(ctx, e.getMessage());
+            unauthorized(ctx, e.getMessage());
         }
     }
 
@@ -78,7 +78,7 @@ public class Server {
             ctx.status(200);
             ctx.result();
         } catch (UnauthorizedException e) {
-            unauthoried(ctx, e.getMessage());
+            unauthorized(ctx, e.getMessage());
         }
     }
 
@@ -90,7 +90,7 @@ public class Server {
             ctx.status(200);
             ctx.result(new Gson().toJson(games));
         } catch (UnauthorizedException e) {
-            unauthoried(ctx, e.getMessage());
+            unauthorized(ctx, e.getMessage());
         }
     }
 
@@ -101,7 +101,7 @@ public class Server {
             ctx.status(200);
             ctx.result(new Gson().toJson(result));
         } catch (UnauthorizedException e) {
-            unauthoried(ctx, e.getMessage());
+            unauthorized(ctx, e.getMessage());
         } catch (BadRequestException e) {
             badRequest(ctx, e.getMessage());
         }
@@ -118,7 +118,7 @@ public class Server {
         } catch (BadRequestException e) {
             badRequest(ctx, e.getMessage());
         } catch (UnauthorizedException e) {
-            unauthoried(ctx, e.getMessage());
+            unauthorized(ctx, e.getMessage());
         } catch (DataAccessException e) {
             other(ctx, e.getMessage());
         }
@@ -143,7 +143,7 @@ public class Server {
         ctx.result(new Gson().toJson(error));
     }
 
-    private void unauthoried(Context ctx, String e){
+    private void unauthorized(Context ctx, String e){
         Response error = new Response(e);
         ctx.contentType("application/json");
         ctx.status(401);
