@@ -11,6 +11,13 @@ public class ServerMain {
         if (args.length >= 1) {
             port = Integer.parseInt(args[0]);
         }
+
+        if (args.length >= 2 && args[1].equals("sql")) {
+            userDataAccess = new SQLUserDAO();
+            authDataAccess = new SQLAuthDAO();
+            gameDataAccess = new SQLGameDAO();
+        }
+
         Server server = new Server(userDataAccess, authDataAccess, gameDataAccess);
         server.run(port);
         System.out.println("♕ 240 Chess Server");
