@@ -54,6 +54,8 @@ public class Server {
             badRequest(ctx, e.getMessage());
         } catch (DataAccessException e) {
             other(ctx, e.getMessage());
+        } catch (SQLDataAccessException e) {
+            sqlException(ctx, e.getMessage());
         }
     }
 
@@ -68,6 +70,8 @@ public class Server {
             badRequest(ctx, e.getMessage());
         } catch (UnauthorizedException e) {
             unauthorized(ctx, e.getMessage());
+        } catch (SQLDataAccessException e) {
+            sqlException(ctx, e.getMessage());
         }
     }
 
@@ -79,6 +83,8 @@ public class Server {
             ctx.result();
         } catch (UnauthorizedException e) {
             unauthorized(ctx, e.getMessage());
+        } catch (SQLDataAccessException e) {
+            sqlException(ctx, e.getMessage());
         }
     }
 
@@ -91,6 +97,8 @@ public class Server {
             ctx.result(new Gson().toJson(games));
         } catch (UnauthorizedException e) {
             unauthorized(ctx, e.getMessage());
+        } catch (SQLDataAccessException e) {
+            sqlException(ctx, e.getMessage());
         }
     }
 
@@ -104,9 +112,9 @@ public class Server {
             unauthorized(ctx, e.getMessage());
         } catch (BadRequestException e) {
             badRequest(ctx, e.getMessage());
+        } catch (SQLDataAccessException e) {
+            sqlException(ctx, e.getMessage());
         }
-
-
     }
 
     private void joinGame(Context ctx){
@@ -121,15 +129,21 @@ public class Server {
             unauthorized(ctx, e.getMessage());
         } catch (DataAccessException e) {
             other(ctx, e.getMessage());
+        } catch (SQLDataAccessException e) {
+            sqlException(ctx, e.getMessage());
         }
     }
 
     private void clear(Context ctx){
-        userService.clear();
-        authService.clear();
-        gameService.clear();
-        ctx.status(200);
-        ctx.result();
+        try {
+            userService.clear();
+            authService.clear();
+            gameService.clear();
+            ctx.status(200);
+            ctx.result();
+        } catch (SQLDataAccessException e) {
+            sqlException(ctx, e.getMessage());
+        }
     }
 
     public void stop() {
@@ -147,6 +161,13 @@ public class Server {
         Response error = new Response(e);
         ctx.contentType("application/json");
         ctx.status(401);
+        ctx.result(new Gson().toJson(error));
+    }
+
+    private void sqlException(Context ctx, String e) {
+        Response error = new Response(e);
+        ctx.contentType("application/json");
+        ctx.status(500);
         ctx.result(new Gson().toJson(error));
     }
 

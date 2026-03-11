@@ -18,7 +18,7 @@ public class UserService extends Service{
     }
 
 
-    public RegisterResult register(RegisterRequest registerRequest) throws DataAccessException {
+    public RegisterResult register(RegisterRequest registerRequest) throws SQLDataAccessException, DataAccessException {
         if (registerRequest.username() == null | registerRequest.password() == null | registerRequest.email() == null){
             throw new BadRequestException("Error: bad request");
         }
@@ -31,7 +31,7 @@ public class UserService extends Service{
         String authToken = authDataAccess.createAuth(user.username());
         return new RegisterResult(user.username(), authToken);
     }
-    public LoginResult login(LoginRequest loginRequest) throws BadRequestException, UnauthorizedException {
+    public LoginResult login(LoginRequest loginRequest) throws BadRequestException, UnauthorizedException, SQLDataAccessException {
         if (loginRequest.username() == null | loginRequest.password() == null){
             throw new BadRequestException("Error: bad request");
         }
@@ -46,28 +46,18 @@ public class UserService extends Service{
         } else if (!userDataAccess.matchPasswords(user.password(), loginRequest.password())){
             throw new UnauthorizedException("Error: unauthorized, incorrect password");
         }
-
-
         String authToken = authDataAccess.createAuth(user.username());
         return new LoginResult(user.username(), authToken);
     }
 
-    public void logout(LogoutRequest logoutRequest) throws UnauthorizedException {
+    public void logout(LogoutRequest logoutRequest) throws UnauthorizedException, SQLDataAccessException {
         String authToken = logoutRequest.authToken();
         validateAuthToken(authDataAccess, authToken);
-        try {
-            authDataAccess.deleteAuth(authToken);
-        } catch (DataAccessException e) {
-            throw new RuntimeException(e);
-        }
+        authDataAccess.deleteAuth(authToken);
     }
 
-    public void clear() {
-        try {
-            userDataAccess.clearUsers();
-        } catch (DataAccessException e) {
-            throw new RuntimeException(e);
-        }
+    public void clear() throws SQLDataAccessException {
+        userDataAccess.clearUsers();
     }
 
 }

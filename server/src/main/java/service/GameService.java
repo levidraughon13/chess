@@ -22,7 +22,7 @@ public class GameService extends Service{
         this.authDataAccess = authDataAccess;
     }
 
-    public NewGameResult createGame(NewGameRequest gameRequest, String authToken) throws UnauthorizedException, BadRequestException {
+    public NewGameResult createGame(NewGameRequest gameRequest, String authToken) throws UnauthorizedException, BadRequestException, SQLDataAccessException {
         validateAuthToken(authDataAccess, authToken);
         if (gameRequest.gameName() == null){ throw new BadRequestException("Error: bad request"); }
         int gameID = 0;
@@ -34,14 +34,10 @@ public class GameService extends Service{
         return new NewGameResult(gameID);
     }
 
-    public GameList listGames(String authToken) throws UnauthorizedException {
+    public GameList listGames(String authToken) throws UnauthorizedException, SQLDataAccessException {
         validateAuthToken(authDataAccess, authToken);
         HashMap<Integer, GameData> games = null;
-        try {
-            games = gameDataAccess.listGames();
-        } catch (DataAccessException e) {
-            throw new RuntimeException(e);
-        }
+        games = gameDataAccess.listGames();
         List<GameInfo> gameInfo = new ArrayList<>();
         for (GameData data : games.values()){
             gameInfo.add(new GameInfo(data.gameID(), data.whiteUsername(), data.blackUsername(), data.gameName()));
@@ -49,8 +45,9 @@ public class GameService extends Service{
         return new GameList(gameInfo);
     }
 
-    public void joinGame(JoinRequest joinRequest, String authToken) throws DataAccessException {
+    public void joinGame(JoinRequest joinRequest, String authToken) throws DataAccessException, SQLDataAccessException{
         AuthData authData = validateAuthToken(authDataAccess, authToken);
+        if (joinRequest.gameID() == null) throw new BadRequestException("Error: invalid gameID");
         GameData game = gameDataAccess.getGame(joinRequest.gameID());
         if (Objects.equals(joinRequest.playerColor(), "WHITE")){
             if (game.whiteUsername() != null) {
@@ -64,7 +61,7 @@ public class GameService extends Service{
         gameDataAccess.joinGame(joinRequest.gameID(), authData.username(), joinRequest.playerColor());
     }
 
-    public void clear(){
+    public void clear() throws SQLDataAccessException {
         gameDataAccess.clearGames();
     }
 }

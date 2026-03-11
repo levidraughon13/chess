@@ -22,7 +22,7 @@ public class SQLAuthDAO implements AuthDAO{
     }
 
     @Override
-    public AuthData getAuth(String authToken) throws DataAccessException {
+    public AuthData getAuth(String authToken) throws SQLDataAccessException {
         try (Connection conn = DatabaseManager.getConnection()) {
             var statement = "SELECT authToken, username FROM auths WHERE authToken=?";
             try (PreparedStatement ps = conn.prepareStatement(statement)) {
@@ -34,25 +34,25 @@ public class SQLAuthDAO implements AuthDAO{
                 }
             }
         } catch (Exception e) {
-            throw new DataAccessException(String.format("Unable to read data: %s", e.getMessage()));
+            throw new SQLDataAccessException(String.format("Error, unable to read data: %s", e.getMessage()));
         }
         return null;
     }
 
     @Override
-    public void deleteAuth(String authToken) throws DataAccessException {
+    public void deleteAuth(String authToken) throws SQLDataAccessException {
         var statement = "DELETE FROM auths WHERE authToken=?";
         executeUpdate(statement, authToken);
     }
 
     @Override
-    public void clearAuths() throws DataAccessException {
+    public void clearAuths() throws SQLDataAccessException {
         var statement = "TRUNCATE auths";
         executeUpdate(statement);
     }
 
     @Override
-    public String createAuth(String username) {
+    public String createAuth(String username) throws SQLDataAccessException {
         String authToken;
         try {
             authToken = generateToken();
@@ -61,8 +61,8 @@ public class SQLAuthDAO implements AuthDAO{
             }
             String statement = "INSERT INTO auths (authToken, username) VALUES (?, ?)";
             executeUpdate(statement, authToken, username);
-        } catch (DataAccessException e) {
-            throw new RuntimeException(e);
+        } catch (SQLDataAccessException e) {
+            throw new SQLDataAccessException(e.getMessage());
         }
         return authToken;
     }
@@ -71,7 +71,7 @@ public class SQLAuthDAO implements AuthDAO{
         return UUID.randomUUID().toString();
     }
 
-    private void executeUpdate(String statement, Object... params) throws DataAccessException {
+    private void executeUpdate(String statement, Object... params) throws SQLDataAccessException {
         try (Connection conn = DatabaseManager.getConnection()) {
             try (PreparedStatement ps = conn.prepareStatement(statement, RETURN_GENERATED_KEYS)) {
                 for (int i = 0; i < params.length; i++) {
@@ -88,8 +88,8 @@ public class SQLAuthDAO implements AuthDAO{
                 }
 
             }
-        } catch (SQLException e) {
-            throw new DataAccessException(String.format("unable to update database: %s, %s", statement, e.getMessage()));
+        } catch (SQLException | DataAccessException e) {
+            throw new SQLDataAccessException(String.format("Error: unable to update database: %s, %s", statement, e.getMessage()));
         }
     }
 

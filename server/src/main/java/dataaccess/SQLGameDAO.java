@@ -26,13 +26,13 @@ public class SQLGameDAO implements GameDAO{
     }
 
     @Override
-    public int createGame(String gameName) throws DataAccessException {
+    public int createGame(String gameName) throws SQLDataAccessException {
         String statement = "INSERT INTO games (whiteUsername, blackUsername, gameName, game) VALUES (?, ?, ?, ?)";
         return executeUpdate(statement, null, null, gameName, new ChessGame());
     }
 
     @Override
-    public HashMap<Integer, GameData> listGames() throws DataAccessException {
+    public HashMap<Integer, GameData> listGames() throws SQLDataAccessException {
         HashMap<Integer, GameData> allGames = new HashMap<>();
         try (Connection conn = DatabaseManager.getConnection()) {
             String statement = "SELECT * FROM games";
@@ -44,14 +44,14 @@ public class SQLGameDAO implements GameDAO{
                 }
             }
         } catch (Exception e) {
-            throw new DataAccessException(String.format("Unable to read data: %s", e.getMessage()));
+            throw new SQLDataAccessException(String.format("Unable to read data: %s", e.getMessage()));
         }
         return allGames;
     }
 
 
     @Override
-    public void joinGame(Integer gameID, String username, String team) throws BadRequestException {
+    public void joinGame(Integer gameID, String username, String team) throws BadRequestException, SQLDataAccessException {
         String statement = "";
         if (Objects.equals(team, "WHITE")){
             statement = "UPDATE games SET whiteUsername=? WHERE gameID=?";
@@ -60,15 +60,11 @@ public class SQLGameDAO implements GameDAO{
         } else {
             throw new BadRequestException("Error: bad request, invalid team color");
         }
-        try {
-            executeUpdate(statement, username, gameID);
-        } catch (DataAccessException e) {
-            throw new RuntimeException(e);
-        }
+        executeUpdate(statement, username, gameID);
     }
 
     @Override
-    public GameData getGame(Integer gameID) throws DataAccessException {
+    public GameData getGame(Integer gameID) throws SQLDataAccessException, BadRequestException {
         try (Connection conn = DatabaseManager.getConnection()) {
             String statement = "SELECT gameID, whiteUsername, blackUsername, gameName, game FROM games WHERE gameID=?";
             try (PreparedStatement ps = conn.prepareStatement(statement)) {
@@ -81,22 +77,18 @@ public class SQLGameDAO implements GameDAO{
                 }
             }
         } catch (Exception e) {
-            throw new DataAccessException(String.format("Unable to read data: %s", e.getMessage()));
+            throw new SQLDataAccessException(String.format("Error: Unable to read data: %s", e.getMessage()));
         }
         throw new BadRequestException("Error: bad request");
     }
 
     @Override
-    public void clearGames() {
+    public void clearGames() throws SQLDataAccessException {
         var statement = "TRUNCATE games";
-        try {
-            executeUpdate(statement);
-        } catch (DataAccessException e) {
-            throw new RuntimeException(e);
-        }
+        executeUpdate(statement);
     }
 
-    private int executeUpdate(String statement, Object... params) throws DataAccessException {
+    private int executeUpdate(String statement, Object... params) throws SQLDataAccessException {
         try (Connection conn = DatabaseManager.getConnection()) {
             try (PreparedStatement ps = conn.prepareStatement(statement, RETURN_GENERATED_KEYS)) {
                 for (int i = 0; i < params.length; i++) {
@@ -115,8 +107,8 @@ public class SQLGameDAO implements GameDAO{
 
                 return 0;
             }
-        } catch (SQLException e) {
-            throw new DataAccessException(String.format("unable to update database: %s, %s", statement, e.getMessage()));
+        } catch (SQLException | DataAccessException e) {
+            throw new SQLDataAccessException(String.format("Error: unable to update database: %s, %s", statement, e.getMessage()));
         }
     }
 
@@ -143,7 +135,7 @@ public class SQLGameDAO implements GameDAO{
                 }
             }
         } catch (SQLException ex) {
-            throw new DataAccessException(String.format("Unable to configure database: %s", ex.getMessage()));
+            throw new DataAccessException(String.format("Error: Unable to configure database: %s", ex.getMessage()));
         }
     }
 }

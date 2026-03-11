@@ -38,19 +38,19 @@ public class ServiceTests {
     }
 
     @Test
-    public void registerSuccessTest() throws DataAccessException {
+    public void registerSuccessTest() throws DataAccessException, SQLDataAccessException {
         RegisterResult result = users.register(new RegisterRequest("levi", "1234", "email"));
         assert (result.authToken() != null && Objects.equals(result.username(), "levi"));
     }
 
     @Test
-    public void registerFailTest() throws DataAccessException {
+    public void registerFailTest() throws DataAccessException, SQLDataAccessException {
         users.register(new RegisterRequest("levi", "1234", "email"));
         assertThrows(DataAccessException.class, () -> users.register(new RegisterRequest("levi", "5678", "email")));
     }
 
     @Test
-    public void loginSuccessTest() throws DataAccessException {
+    public void loginSuccessTest() throws DataAccessException, SQLDataAccessException {
         users.register(new RegisterRequest("levi", "1234", "email"));
         LoginResult result = users.login(new LoginRequest("levi", "1234"));
         assert (Objects.equals(result.username(), "levi"));
@@ -63,7 +63,7 @@ public class ServiceTests {
     }
 
     @Test
-    public void logoutSuccessTest() throws DataAccessException{
+    public void logoutSuccessTest() throws DataAccessException, SQLDataAccessException{
         RegisterResult result = users.register(new RegisterRequest("levi", "1234", "email"));
         users.logout(new LogoutRequest(result.authToken()));
         assert (authDAO.getAuth(result.authToken()) == null);
@@ -75,7 +75,7 @@ public class ServiceTests {
     }
 
     @Test
-    public void createGameSuccessTest() throws DataAccessException{
+    public void createGameSuccessTest() throws DataAccessException, SQLDataAccessException{
         RegisterResult register =  users.register(new RegisterRequest("levi", "1234", "email"));
         NewGameResult result = games.createGame(new NewGameRequest("test game"), register.authToken());
 
@@ -88,7 +88,7 @@ public class ServiceTests {
     }
 
     @Test
-    public void joinGameSuccessTest() throws DataAccessException{
+    public void joinGameSuccessTest() throws DataAccessException, SQLDataAccessException{
         RegisterResult register =  users.register(new RegisterRequest("levi", "1234", "email"));
         NewGameResult game = games.createGame(new NewGameRequest("test game"), register.authToken());
         games.joinGame(new JoinRequest("WHITE", game.gameID()), register.authToken());
@@ -97,7 +97,7 @@ public class ServiceTests {
     }
 
     @Test
-    public void joinGameFailTest() throws DataAccessException{
+    public void joinGameFailTest() throws DataAccessException, SQLDataAccessException{
         RegisterResult register =  users.register(new RegisterRequest("levi", "1234", "email"));
         games.createGame(new NewGameRequest("test game"), register.authToken());
 
@@ -105,7 +105,7 @@ public class ServiceTests {
     }
 
     @Test
-    public void listGamesSuccessTest() throws DataAccessException{
+    public void listGamesSuccessTest() throws DataAccessException, SQLDataAccessException{
         RegisterResult register = users.register(new RegisterRequest("levi", "1234", "email"));
         games.createGame(new NewGameRequest("test game"), register.authToken());
         users.logout(new LogoutRequest(register.authToken()));
@@ -127,7 +127,7 @@ public class ServiceTests {
     }
 
     @Test
-    public void clearSuccessTest() throws DataAccessException{
+    public void clearSuccessTest() throws DataAccessException, SQLDataAccessException{
         RegisterResult register = users.register(new RegisterRequest("levi", "1234", "email"));
         games.createGame(new NewGameRequest("test game"), register.authToken());
         users.logout(new LogoutRequest(register.authToken()));
@@ -150,7 +150,7 @@ public class ServiceTests {
     }
 
     @Test
-    public void clearNoneTest() {
+    public void clearNoneTest() throws DataAccessException, SQLDataAccessException{
         users.clear();
         auths.clear();
         games.clear();

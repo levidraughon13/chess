@@ -22,7 +22,7 @@ public class SQLUserDAO implements UserDAO{
     }
 
     @Override
-    public UserData getUser(String username) throws DataAccessException {
+    public UserData getUser(String username) throws SQLDataAccessException {
         try (Connection conn = DatabaseManager.getConnection()) {
             var statement = "SELECT username, password, email FROM users WHERE username=?";
             try (PreparedStatement ps = conn.prepareStatement(statement)) {
@@ -34,20 +34,20 @@ public class SQLUserDAO implements UserDAO{
                 }
             }
         } catch (Exception e) {
-            throw new DataAccessException(String.format("Unable to read data: %s", e.getMessage()));
+            throw new SQLDataAccessException(String.format("Error, unable to read data: %s", e.getMessage()));
         }
         return null;
     }
 
     @Override
-    public void createUser(String username, String password, String email) throws DataAccessException {
+    public void createUser(String username, String password, String email) throws SQLDataAccessException {
         var statement = "INSERT INTO users (username, password, email) VALUES (?, ?, ?)";
         String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt());
         executeUpdate(statement, username, hashedPassword, email);
     }
 
     @Override
-    public void clearUsers() throws DataAccessException {
+    public void clearUsers() throws SQLDataAccessException {
         var statement = "TRUNCATE users";
         executeUpdate(statement);
     }
@@ -57,7 +57,7 @@ public class SQLUserDAO implements UserDAO{
         return BCrypt.checkpw(password, dbPassword);
     }
 
-    private int executeUpdate(String statement, Object... params) throws DataAccessException {
+    private int executeUpdate(String statement, Object... params) throws SQLDataAccessException {
         try (Connection conn = DatabaseManager.getConnection()) {
             try (PreparedStatement ps = conn.prepareStatement(statement, RETURN_GENERATED_KEYS)) {
                 for (int i = 0; i < params.length; i++) {
@@ -75,8 +75,8 @@ public class SQLUserDAO implements UserDAO{
 
                 return 0;
             }
-        } catch (SQLException e) {
-            throw new DataAccessException(String.format("unable to update database: %s, %s", statement, e.getMessage()));
+        } catch (SQLException | DataAccessException e) {
+            throw new SQLDataAccessException(String.format("Error: unable to update database: %s, %s", statement, e.getMessage()));
         }
     }
 
