@@ -35,7 +35,12 @@ public class UserService extends Service{
         if (loginRequest.username() == null | loginRequest.password() == null){
             throw new BadRequestException("Error: bad request");
         }
-        UserData user = userDataAccess.getUser(loginRequest.username());
+        UserData user = null;
+        try {
+            user = userDataAccess.getUser(loginRequest.username());
+        } catch (DataAccessException e) {
+            throw new RuntimeException(e);
+        }
         if (user == null){
             throw new UnauthorizedException("Error: unauthorized, user does not exist");
         } else if (!Objects.equals(user.password(), loginRequest.password())){

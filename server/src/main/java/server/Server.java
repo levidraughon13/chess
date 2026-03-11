@@ -19,7 +19,7 @@ public class Server {
     private final GameService gameService;
 
     public Server(){
-        this(new MemoryUserDAO(), new MemoryAuthDAO(), new MemoryGameDAO());
+        this(new SQLUserDAO(), new SQLAuthDAO(), new SQLGameDAO());
     }
 
     public Server(UserDAO user, AuthDAO auth, GameDAO game) {
