@@ -43,12 +43,12 @@ public class SQLGameDAO implements GameDAO{
 
     private final String[] createStatements = {
             """
-            CREATE TABLE IF NOT EXISTS  pet (
+            CREATE TABLE IF NOT EXISTS  games (
               `gameID` int NOT NULL AUTO_INCREMENT,
-              `whiteUsername` varchar(256) NOT NULL,
-              `blackUsername` varchar(256) NOT NULL,
-              `gameName` varchar(256) NOT NULL,
-              PRIMARY KEY (`gameID`),
+              `whiteUsername` varchar(255) NOT NULL,
+              `blackUsername` varchar(255) NOT NULL,
+              `gameName` varchar(255) NOT NULL,
+              PRIMARY KEY (`gameID`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
             """
     };

@@ -55,11 +55,19 @@ public class UserService extends Service{
     public void logout(LogoutRequest logoutRequest) throws UnauthorizedException {
         String authToken = logoutRequest.authToken();
         validateAuthToken(authDataAccess, authToken);
-        authDataAccess.deleteAuth(authToken);
+        try {
+            authDataAccess.deleteAuth(authToken);
+        } catch (DataAccessException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public void clear() {
-        userDataAccess.clearUsers();
+        try {
+            userDataAccess.clearUsers();
+        } catch (DataAccessException e) {
+            throw new RuntimeException(e);
+        }
     }
 
 }

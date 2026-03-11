@@ -1,6 +1,7 @@
 package service;
 
 import dataaccess.AuthDAO;
+import dataaccess.DataAccessException;
 
 public class AuthService extends Service {
     private final AuthDAO authDataAccess;
@@ -10,7 +11,11 @@ public class AuthService extends Service {
     }
 
     public void clear(){
-        authDataAccess.clearAuths();
+        try {
+            authDataAccess.clearAuths();
+        } catch (DataAccessException e) {
+            throw new RuntimeException(e);
+        }
     }
 
 }

@@ -1,13 +1,19 @@
 package service;
 
 import dataaccess.AuthDAO;
+import dataaccess.DataAccessException;
 import dataaccess.UnauthorizedException;
 import model.AuthData;
 
 public class Service {
 
     public AuthData validateAuthToken(AuthDAO authDataAccess, String authToken) throws UnauthorizedException {
-        AuthData data = authDataAccess.getAuth(authToken);
+        AuthData data = null;
+        try {
+            data = authDataAccess.getAuth(authToken);
+        } catch (DataAccessException e) {
+            throw new RuntimeException(e);
+        }
         boolean b = (data == null);
         if (b) {
             throw new UnauthorizedException("Error: unauthorized");
