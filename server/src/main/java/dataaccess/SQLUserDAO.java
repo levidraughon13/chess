@@ -52,6 +52,11 @@ public class SQLUserDAO implements UserDAO{
         executeUpdate(statement);
     }
 
+    @Override
+    public boolean matchPasswords(String dbPassword, String password) {
+        return BCrypt.checkpw(password, dbPassword);
+    }
+
     private int executeUpdate(String statement, Object... params) throws DataAccessException {
         try (Connection conn = DatabaseManager.getConnection()) {
             try (PreparedStatement ps = conn.prepareStatement(statement, RETURN_GENERATED_KEYS)) {

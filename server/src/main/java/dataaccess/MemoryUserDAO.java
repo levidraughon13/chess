@@ -2,6 +2,7 @@ package dataaccess;
 
 import model.UserData;
 import java.util.HashMap;
+import java.util.Objects;
 
 public class MemoryUserDAO implements UserDAO {
     private final HashMap<String, UserData> users = new HashMap<>();
@@ -15,4 +16,10 @@ public class MemoryUserDAO implements UserDAO {
     public void clearUsers(){
         users.clear();
     }
+
+    @Override
+    public boolean matchPasswords(String dbPassword, String password) {
+        return Objects.equals(dbPassword, password);
+    }
+
 }

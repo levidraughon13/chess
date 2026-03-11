@@ -43,7 +43,7 @@ public class UserService extends Service{
         }
         if (user == null){
             throw new UnauthorizedException("Error: unauthorized, user does not exist");
-        } else if (!Objects.equals(user.password(), loginRequest.password())){
+        } else if (!userDataAccess.matchPasswords(user.password(), loginRequest.password())){
             throw new UnauthorizedException("Error: unauthorized, incorrect password");
         }
 
