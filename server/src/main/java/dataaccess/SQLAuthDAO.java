@@ -1,12 +1,12 @@
 package dataaccess;
 
 import model.AuthData;
-import model.UserData;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.UUID;
 
 import static java.sql.Statement.RETURN_GENERATED_KEYS;
 import static java.sql.Types.NULL;
@@ -53,7 +53,22 @@ public class SQLAuthDAO implements AuthDAO{
 
     @Override
     public String createAuth(String username) {
-        return "";
+        String authToken;
+        try {
+            authToken = generateToken();
+            while (getAuth(authToken) != null) {
+                authToken = generateToken();
+            }
+            String statement = "INSERT INTO auths (authToken, username) VALUES (?, ?)";
+            executeUpdate(statement, authToken, username);
+        } catch (DataAccessException e) {
+            throw new RuntimeException(e);
+        }
+        return authToken;
+    }
+
+    public static String generateToken() {
+        return UUID.randomUUID().toString();
     }
 
     private int executeUpdate(String statement, Object... params) throws DataAccessException {

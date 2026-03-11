@@ -1,10 +1,18 @@
 package dataaccess;
 
+import chess.ChessGame;
+import com.google.gson.Gson;
 import model.GameData;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
+import java.util.Objects;
+
+import static java.sql.Statement.RETURN_GENERATED_KEYS;
+import static java.sql.Types.NULL;
 
 public class SQLGameDAO implements GameDAO{
 
@@ -17,8 +25,9 @@ public class SQLGameDAO implements GameDAO{
     }
 
     @Override
-    public int createGame(String gameName) {
-        return 0;
+    public int createGame(String gameName) throws DataAccessException {
+        String statement = "INSERT INTO games (gameID, whiteUsername, blackUsername, gameName, game) VALUES (?, ?, ?, ?)";
+        return executeUpdate(statement, null, null, gameName, new ChessGame());
     }
 
     @Override
@@ -28,26 +37,82 @@ public class SQLGameDAO implements GameDAO{
 
     @Override
     public void joinGame(Integer gameID, String username, String team) throws BadRequestException {
-
+        String statement = "";
+        if (Objects.equals(team, "WHITE")){
+            statement = "UPDATE game SET whiteUsername=? WHERE gameID=?";
+        } else if (Objects.equals(team, "BLACK")){
+            statement = "UPDATE game SET blackUsername=? WHERE gameID=?";
+        } else {
+            throw new BadRequestException("Error: bad request, invalid team color");
+        }
+        try {
+            executeUpdate(statement, username, gameID);
+        } catch (DataAccessException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
-    public GameData getGame(Integer gameID) throws BadRequestException {
-        return null;
+    public GameData getGame(Integer gameID) throws DataAccessException {
+        try (Connection conn = DatabaseManager.getConnection()) {
+            String statement = "SELECT gameID, whiteUsername, blackUsername, gameName, game FROM games WHERE gameID=?";
+            try (PreparedStatement ps = conn.prepareStatement(statement)) {
+                ps.setInt(1, gameID);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) {
+                        ChessGame game = new Gson().fromJson(rs.getString(5), ChessGame.class);
+                        return new GameData(rs.getInt(1),rs.getString(2),rs.getString(3), rs.getString(4), game);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            throw new DataAccessException(String.format("Unable to read data: %s", e.getMessage()));
+        }
+        throw new BadRequestException("Error: bad request");
     }
 
     @Override
     public void clearGames() {
+        var statement = "TRUNCATE games";
+        try {
+            executeUpdate(statement);
+        } catch (DataAccessException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
+    private int executeUpdate(String statement, Object... params) throws DataAccessException {
+        try (Connection conn = DatabaseManager.getConnection()) {
+            try (PreparedStatement ps = conn.prepareStatement(statement, RETURN_GENERATED_KEYS)) {
+                for (int i = 0; i < params.length; i++) {
+                    Object param = params[i];
+                    if (param instanceof String p) ps.setString(i + 1, p);
+                    else if (param instanceof Integer p) ps.setInt(i + 1, p);
+                    else if (param instanceof ChessGame p) ps.setString(i + 1, new Gson().toJson(p));
+                    else if (param == null) ps.setNull(i + 1, NULL);
+                }
+                ps.executeUpdate();
+
+                ResultSet rs = ps.getGeneratedKeys();
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+
+                return 0;
+            }
+        } catch (SQLException e) {
+            throw new DataAccessException(String.format("unable to update database: %s, %s", statement, e.getMessage()));
+        }
     }
 
     private final String[] createStatements = {
             """
             CREATE TABLE IF NOT EXISTS  games (
               `gameID` int NOT NULL AUTO_INCREMENT,
-              `whiteUsername` varchar(255) NOT NULL,
-              `blackUsername` varchar(255) NOT NULL,
+              `whiteUsername` varchar(255),
+              `blackUsername` varchar(255),
               `gameName` varchar(255) NOT NULL,
+              `game` TEXT DEFAULT NULL,
               PRIMARY KEY (`gameID`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
             """

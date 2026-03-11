@@ -25,7 +25,12 @@ public class GameService extends Service{
     public NewGameResult createGame(NewGameRequest gameRequest, String authToken) throws UnauthorizedException, BadRequestException {
         validateAuthToken(authDataAccess, authToken);
         if (gameRequest.gameName() == null){ throw new BadRequestException("Error: bad request"); }
-        int gameID = gameDataAccess.createGame(gameRequest.gameName());
+        int gameID = 0;
+        try {
+            gameID = gameDataAccess.createGame(gameRequest.gameName());
+        } catch (DataAccessException e) {
+            throw new RuntimeException(e);
+        }
         return new NewGameResult(gameID);
     }
 
