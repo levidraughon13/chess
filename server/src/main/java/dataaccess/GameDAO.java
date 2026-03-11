@@ -8,7 +8,7 @@ public interface GameDAO {
 
     int createGame(String gameName) throws DataAccessException;
 
-    HashMap<Integer, GameData> listGames();
+    HashMap<Integer, GameData> listGames() throws DataAccessException;
 
     void joinGame(Integer gameID, String username, String team) throws BadRequestException;
 

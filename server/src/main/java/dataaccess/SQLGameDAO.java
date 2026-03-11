@@ -2,6 +2,7 @@ package dataaccess;
 
 import chess.ChessGame;
 import com.google.gson.Gson;
+import model.AuthData;
 import model.GameData;
 
 import java.sql.Connection;
@@ -26,22 +27,36 @@ public class SQLGameDAO implements GameDAO{
 
     @Override
     public int createGame(String gameName) throws DataAccessException {
-        String statement = "INSERT INTO games (gameID, whiteUsername, blackUsername, gameName, game) VALUES (?, ?, ?, ?)";
+        String statement = "INSERT INTO games (whiteUsername, blackUsername, gameName, game) VALUES (?, ?, ?, ?)";
         return executeUpdate(statement, null, null, gameName, new ChessGame());
     }
 
     @Override
-    public HashMap<Integer, GameData> listGames() {
-        return null;
+    public HashMap<Integer, GameData> listGames() throws DataAccessException {
+        HashMap<Integer, GameData> allGames = new HashMap<>();
+        try (Connection conn = DatabaseManager.getConnection()) {
+            String statement = "SELECT * FROM games";
+            try (PreparedStatement ps = conn.prepareStatement(statement)) {
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        allGames.put(rs.getInt(1), getGame(rs.getInt(1)));
+                    }
+                }
+            }
+        } catch (Exception e) {
+            throw new DataAccessException(String.format("Unable to read data: %s", e.getMessage()));
+        }
+        return allGames;
     }
+
 
     @Override
     public void joinGame(Integer gameID, String username, String team) throws BadRequestException {
         String statement = "";
         if (Objects.equals(team, "WHITE")){
-            statement = "UPDATE game SET whiteUsername=? WHERE gameID=?";
+            statement = "UPDATE games SET whiteUsername=? WHERE gameID=?";
         } else if (Objects.equals(team, "BLACK")){
-            statement = "UPDATE game SET blackUsername=? WHERE gameID=?";
+            statement = "UPDATE games SET blackUsername=? WHERE gameID=?";
         } else {
             throw new BadRequestException("Error: bad request, invalid team color");
         }

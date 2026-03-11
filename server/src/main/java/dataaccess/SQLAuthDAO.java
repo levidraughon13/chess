@@ -71,7 +71,7 @@ public class SQLAuthDAO implements AuthDAO{
         return UUID.randomUUID().toString();
     }
 
-    private int executeUpdate(String statement, Object... params) throws DataAccessException {
+    private void executeUpdate(String statement, Object... params) throws DataAccessException {
         try (Connection conn = DatabaseManager.getConnection()) {
             try (PreparedStatement ps = conn.prepareStatement(statement, RETURN_GENERATED_KEYS)) {
                 for (int i = 0; i < params.length; i++) {
@@ -84,10 +84,9 @@ public class SQLAuthDAO implements AuthDAO{
 
                 ResultSet rs = ps.getGeneratedKeys();
                 if (rs.next()) {
-                    return rs.getInt(1);
+                    rs.getInt(1);
                 }
 
-                return 0;
             }
         } catch (SQLException e) {
             throw new DataAccessException(String.format("unable to update database: %s, %s", statement, e.getMessage()));

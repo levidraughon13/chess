@@ -8,7 +8,7 @@ import model.AuthData;
 public class Service {
 
     public AuthData validateAuthToken(AuthDAO authDataAccess, String authToken) throws UnauthorizedException {
-        AuthData data = null;
+        AuthData data;
         try {
             data = authDataAccess.getAuth(authToken);
         } catch (DataAccessException e) {

@@ -36,7 +36,12 @@ public class GameService extends Service{
 
     public GameList listGames(String authToken) throws UnauthorizedException {
         validateAuthToken(authDataAccess, authToken);
-        HashMap<Integer, GameData> games = gameDataAccess.listGames();
+        HashMap<Integer, GameData> games = null;
+        try {
+            games = gameDataAccess.listGames();
+        } catch (DataAccessException e) {
+            throw new RuntimeException(e);
+        }
         List<GameInfo> gameInfo = new ArrayList<>();
         for (GameData data : games.values()){
             gameInfo.add(new GameInfo(data.gameID(), data.whiteUsername(), data.blackUsername(), data.gameName()));
