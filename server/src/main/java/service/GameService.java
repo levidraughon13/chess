@@ -22,21 +22,21 @@ public class GameService extends Service{
         this.authDataAccess = authDataAccess;
     }
 
-    public NewGameResult createGame(NewGameRequest gameRequest, String authToken) throws UnauthorizedException, BadRequestException, SQLDataAccessException {
+    public NewGameResult createGame(NewGameRequest gameRequest, String authToken) throws
+            UnauthorizedException,
+            BadRequestException,
+            SQLDataAccessException {
         validateAuthToken(authDataAccess, authToken);
-        if (gameRequest.gameName() == null){ throw new BadRequestException("Error: bad request"); }
-        int gameID = 0;
-        try {
-            gameID = gameDataAccess.createGame(gameRequest.gameName());
-        } catch (DataAccessException e) {
-            throw new RuntimeException(e);
+        if (gameRequest.gameName() == null){
+            throw new BadRequestException("Error: bad request");
         }
+        int gameID = gameDataAccess.createGame(gameRequest.gameName());
         return new NewGameResult(gameID);
     }
 
     public GameList listGames(String authToken) throws UnauthorizedException, SQLDataAccessException {
         validateAuthToken(authDataAccess, authToken);
-        HashMap<Integer, GameData> games = null;
+        HashMap<Integer, GameData> games;
         games = gameDataAccess.listGames();
         List<GameInfo> gameInfo = new ArrayList<>();
         for (GameData data : games.values()){
@@ -47,7 +47,9 @@ public class GameService extends Service{
 
     public void joinGame(JoinRequest joinRequest, String authToken) throws DataAccessException, SQLDataAccessException{
         AuthData authData = validateAuthToken(authDataAccess, authToken);
-        if (joinRequest.gameID() == null) throw new BadRequestException("Error: invalid gameID");
+        if (joinRequest.gameID() == null) {
+            throw new BadRequestException("Error: invalid gameID");
+        }
         GameData game = gameDataAccess.getGame(joinRequest.gameID());
         if (Objects.equals(joinRequest.playerColor(), "WHITE")){
             if (game.whiteUsername() != null) {

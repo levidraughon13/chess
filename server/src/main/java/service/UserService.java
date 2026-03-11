@@ -5,8 +5,6 @@ import request.*;
 import result.*;
 import dataaccess.*;
 
-import java.util.Objects;
-
 public class UserService extends Service{
     private final UserDAO userDataAccess;
     private final AuthDAO authDataAccess;
@@ -16,7 +14,6 @@ public class UserService extends Service{
         this.userDataAccess = userDataAccess;
         this.authDataAccess = authDataAccess;
     }
-
 
     public RegisterResult register(RegisterRequest registerRequest) throws SQLDataAccessException, DataAccessException {
         if (registerRequest.username() == null | registerRequest.password() == null | registerRequest.email() == null){
@@ -31,16 +28,12 @@ public class UserService extends Service{
         String authToken = authDataAccess.createAuth(user.username());
         return new RegisterResult(user.username(), authToken);
     }
-    public LoginResult login(LoginRequest loginRequest) throws BadRequestException, UnauthorizedException, SQLDataAccessException {
+
+    public LoginResult login(LoginRequest loginRequest) throws SQLDataAccessException, BadRequestException, UnauthorizedException {
         if (loginRequest.username() == null | loginRequest.password() == null){
             throw new BadRequestException("Error: bad request");
         }
-        UserData user = null;
-        try {
-            user = userDataAccess.getUser(loginRequest.username());
-        } catch (DataAccessException e) {
-            throw new RuntimeException(e);
-        }
+        UserData user = userDataAccess.getUser(loginRequest.username());
         if (user == null){
             throw new UnauthorizedException("Error: unauthorized, user does not exist");
         } else if (!userDataAccess.matchPasswords(user.password(), loginRequest.password())){

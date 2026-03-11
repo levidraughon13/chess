@@ -2,7 +2,6 @@ package dataaccess;
 
 import chess.ChessGame;
 import com.google.gson.Gson;
-import model.AuthData;
 import model.GameData;
 
 import java.sql.Connection;
@@ -52,7 +51,7 @@ public class SQLGameDAO implements GameDAO{
 
     @Override
     public void joinGame(Integer gameID, String username, String team) throws BadRequestException, SQLDataAccessException {
-        String statement = "";
+        String statement;
         if (Objects.equals(team, "WHITE")){
             statement = "UPDATE games SET whiteUsername=? WHERE gameID=?";
         } else if (Objects.equals(team, "BLACK")){
@@ -93,10 +92,14 @@ public class SQLGameDAO implements GameDAO{
             try (PreparedStatement ps = conn.prepareStatement(statement, RETURN_GENERATED_KEYS)) {
                 for (int i = 0; i < params.length; i++) {
                     Object param = params[i];
-                    if (param instanceof String p) ps.setString(i + 1, p);
-                    else if (param instanceof Integer p) ps.setInt(i + 1, p);
-                    else if (param instanceof ChessGame p) ps.setString(i + 1, new Gson().toJson(p));
-                    else if (param == null) ps.setNull(i + 1, NULL);
+                    switch (param) {
+                        case String p -> ps.setString(i + 1, p);
+                        case Integer p -> ps.setInt(i + 1, p);
+                        case ChessGame p -> ps.setString(i + 1, new Gson().toJson(p));
+                        case null -> ps.setNull(i + 1, NULL);
+                        default -> {
+                        }
+                    }
                 }
                 ps.executeUpdate();
 

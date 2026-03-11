@@ -6,7 +6,7 @@ import java.util.HashMap;
 
 public interface GameDAO {
 
-    int createGame(String gameName) throws DataAccessException, SQLDataAccessException;
+    int createGame(String gameName) throws SQLDataAccessException;
 
     HashMap<Integer, GameData> listGames() throws SQLDataAccessException;
 

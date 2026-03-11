@@ -5,11 +5,9 @@ import dataaccess.*;
 
 import io.javalin.*;
 import io.javalin.http.Context;
-import model.*;
 import request.*;
 import result.*;
 import service.*;
-import service.UserService.*;
 
 public class Server {
 

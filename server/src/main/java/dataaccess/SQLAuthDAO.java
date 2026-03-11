@@ -55,10 +55,9 @@ public class SQLAuthDAO implements AuthDAO{
     public String createAuth(String username) throws SQLDataAccessException {
         String authToken;
         try {
-            authToken = generateToken();
-            while (getAuth(authToken) != null) {
+            do {
                 authToken = generateToken();
-            }
+            } while (getAuth(authToken) != null);
             String statement = "INSERT INTO auths (authToken, username) VALUES (?, ?)";
             executeUpdate(statement, authToken, username);
         } catch (SQLDataAccessException e) {
@@ -76,9 +75,13 @@ public class SQLAuthDAO implements AuthDAO{
             try (PreparedStatement ps = conn.prepareStatement(statement, RETURN_GENERATED_KEYS)) {
                 for (int i = 0; i < params.length; i++) {
                     Object param = params[i];
-                    if (param instanceof String p) ps.setString(i + 1, p);
-                    else if (param instanceof Integer p) ps.setInt(i + 1, p);
-                    else if (param == null) ps.setNull(i + 1, NULL);
+                    switch (param) {
+                        case String p -> ps.setString(i + 1, p);
+                        case Integer p -> ps.setInt(i + 1, p);
+                        case null -> ps.setNull(i + 1, NULL);
+                        default -> {
+                        }
+                    }
                 }
                 ps.executeUpdate();
 
@@ -113,7 +116,7 @@ public class SQLAuthDAO implements AuthDAO{
                 }
             }
         } catch (SQLException ex) {
-            throw new DataAccessException(String.format("Unable to configure database: %s", ex.getMessage()));
+            throw new DataAccessException(String.format("Error: Unable to configure database: %s", ex.getMessage()));
         }
     }
 }
