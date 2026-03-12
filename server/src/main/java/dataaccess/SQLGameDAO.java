@@ -118,7 +118,6 @@ public class SQLGameDAO implements GameDAO{
                 if (rs.next()) {
                     return rs.getInt(1);
                 }
-
                 return 0;
             }
         } catch (SQLException | DataAccessException e) {
