@@ -11,11 +11,21 @@ import java.sql.ResultSet;
 import static java.sql.Statement.RETURN_GENERATED_KEYS;
 import static java.sql.Types.NULL;
 
-public class SQLUserDAO implements UserDAO{
+public class SQLUserDAO implements UserDAO {
 
     public SQLUserDAO(){
         try {
-            configureDatabase();
+            String[] createStatements = {
+                    """
+            CREATE TABLE IF NOT EXISTS users (
+              `username` varchar(255) NOT NULL,
+              `password` varchar(255) NOT NULL,
+              `email` varchar(255) NOT NULL,
+              PRIMARY KEY (`username`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+            """
+            };
+            sqlDAO.configureDatabase(createStatements);
         } catch (DataAccessException e) {
             throw new RuntimeException(e);
         }
@@ -66,8 +76,7 @@ public class SQLUserDAO implements UserDAO{
                         case String p -> ps.setString(i + 1, p);
                         case Integer p -> ps.setInt(i + 1, p);
                         case null -> ps.setNull(i + 1, NULL);
-                        default -> {
-                        }
+                        default -> throw new IllegalStateException("Unexpected value: " + param);
                     }
                 }
                 ps.executeUpdate();
@@ -80,32 +89,6 @@ public class SQLUserDAO implements UserDAO{
             }
         } catch (SQLException | DataAccessException e) {
             throw new SQLDataAccessException(String.format("Error: unable to update database: %s, %s", statement, e.getMessage()));
-        }
-    }
-
-
-    private final String[] createStatements = {
-            """
-            CREATE TABLE IF NOT EXISTS users (
-              `username` varchar(255) NOT NULL,
-              `password` varchar(255) NOT NULL,
-              `email` varchar(255) NOT NULL,
-              PRIMARY KEY (`username`)
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
-            """
-    };
-
-
-    private void configureDatabase() throws DataAccessException {
-        DatabaseManager.createDatabase();
-        try (Connection conn = DatabaseManager.getConnection()) {
-            for (String statement : createStatements) {
-                try (var preparedStatement = conn.prepareStatement(statement)) {
-                    preparedStatement.executeUpdate();
-                }
-            }
-        } catch (SQLException ex) {
-            throw new DataAccessException(String.format("Error: Unable to configure database: %s", ex.getMessage()));
         }
     }
 }
