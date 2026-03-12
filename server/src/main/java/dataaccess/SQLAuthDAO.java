@@ -72,7 +72,7 @@ public class SQLAuthDAO implements AuthDAO{
         return authToken;
     }
 
-    public static String generateToken() {
+    private static String generateToken() {
         return UUID.randomUUID().toString();
     }
 
