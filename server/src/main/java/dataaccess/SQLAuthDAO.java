@@ -5,11 +5,8 @@ import model.AuthData;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.UUID;
 
-import static java.sql.Statement.RETURN_GENERATED_KEYS;
-import static java.sql.Types.NULL;
 
 public class SQLAuthDAO implements AuthDAO{
 
@@ -24,7 +21,7 @@ public class SQLAuthDAO implements AuthDAO{
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
             """
             };
-            sqlDAO.configureDatabase(createStatements);
+            MySqlDAO.configureDatabase(createStatements);
         } catch (DataAccessException e) {
             throw new RuntimeException(e);
         }
@@ -51,13 +48,13 @@ public class SQLAuthDAO implements AuthDAO{
     @Override
     public void deleteAuth(String authToken) throws SQLDataAccessException {
         var statement = "DELETE FROM auths WHERE authToken=?";
-        executeUpdate(statement, authToken);
+        authExecuteUpdate(statement, authToken);
     }
 
     @Override
     public void clearAuths() throws SQLDataAccessException {
         var statement = "TRUNCATE auths";
-        executeUpdate(statement);
+        authExecuteUpdate(statement);
     }
 
     @Override
@@ -68,7 +65,7 @@ public class SQLAuthDAO implements AuthDAO{
                 authToken = generateToken();
             } while (getAuth(authToken) != null);
             String statement = "INSERT INTO auths (authToken, username) VALUES (?, ?)";
-            executeUpdate(statement, authToken, username);
+            authExecuteUpdate(statement, authToken, username);
         } catch (SQLDataAccessException e) {
             throw new SQLDataAccessException(e.getMessage());
         }
@@ -79,28 +76,7 @@ public class SQLAuthDAO implements AuthDAO{
         return UUID.randomUUID().toString();
     }
 
-    private void executeUpdate(String statement, Object... params) throws SQLDataAccessException {
-        try (Connection conn = DatabaseManager.getConnection()) {
-            try (PreparedStatement ps = conn.prepareStatement(statement, RETURN_GENERATED_KEYS)) {
-                for (int i = 0; i < params.length; i++) {
-                    Object param = params[i];
-                    switch (param) {
-                        case String p -> ps.setString(i + 1, p);
-                        case Integer p -> ps.setInt(i + 1, p);
-                        case null -> ps.setNull(i + 1, NULL);
-                        default -> throw new IllegalStateException("Unexpected value: " + param);
-                    }
-                }
-                ps.executeUpdate();
-
-                ResultSet rs = ps.getGeneratedKeys();
-                if (rs.next()) {
-                    rs.getInt(1);
-                }
-
-            }
-        } catch (SQLException | DataAccessException e) {
-            throw new SQLDataAccessException(String.format("Error: unable to update database: %s, %s", statement, e.getMessage()));
-        }
+    private void authExecuteUpdate(String statement, Object... params) throws SQLDataAccessException {
+        MySqlDAO.executeUpdate(statement, params);
     }
 }

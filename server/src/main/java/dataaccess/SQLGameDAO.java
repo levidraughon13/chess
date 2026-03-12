@@ -30,7 +30,7 @@ public class SQLGameDAO implements GameDAO{
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
             """
             };
-            sqlDAO.configureDatabase(createStatements);
+            MySqlDAO.configureDatabase(createStatements);
         } catch (DataAccessException e) {
             throw new RuntimeException(e);
         }

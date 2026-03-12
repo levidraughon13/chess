@@ -5,11 +5,7 @@ import org.mindrot.jbcrypt.BCrypt;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
-import java.sql.SQLException;
 import java.sql.ResultSet;
-
-import static java.sql.Statement.RETURN_GENERATED_KEYS;
-import static java.sql.Types.NULL;
 
 public class SQLUserDAO implements UserDAO {
 
@@ -25,7 +21,7 @@ public class SQLUserDAO implements UserDAO {
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
             """
             };
-            sqlDAO.configureDatabase(createStatements);
+            MySqlDAO.configureDatabase(createStatements);
         } catch (DataAccessException e) {
             throw new RuntimeException(e);
         }
@@ -53,13 +49,13 @@ public class SQLUserDAO implements UserDAO {
     public void createUser(String username, String password, String email) throws SQLDataAccessException {
         var statement = "INSERT INTO users (username, password, email) VALUES (?, ?, ?)";
         String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt());
-        executeUpdate(statement, username, hashedPassword, email);
+        userExecuteUpdate(statement, username, hashedPassword, email);
     }
 
     @Override
     public void clearUsers() throws SQLDataAccessException {
         var statement = "TRUNCATE users";
-        executeUpdate(statement);
+        userExecuteUpdate(statement);
     }
 
     @Override
@@ -67,28 +63,7 @@ public class SQLUserDAO implements UserDAO {
         return BCrypt.checkpw(password, dbPassword);
     }
 
-    private void executeUpdate(String statement, Object... params) throws SQLDataAccessException {
-        try (Connection conn = DatabaseManager.getConnection()) {
-            try (PreparedStatement ps = conn.prepareStatement(statement, RETURN_GENERATED_KEYS)) {
-                for (int i = 0; i < params.length; i++) {
-                    Object param = params[i];
-                    switch (param) {
-                        case String p -> ps.setString(i + 1, p);
-                        case Integer p -> ps.setInt(i + 1, p);
-                        case null -> ps.setNull(i + 1, NULL);
-                        default -> throw new IllegalStateException("Unexpected value: " + param);
-                    }
-                }
-                ps.executeUpdate();
-
-                ResultSet rs = ps.getGeneratedKeys();
-                if (rs.next()) {
-                    rs.getInt(1);
-                }
-
-            }
-        } catch (SQLException | DataAccessException e) {
-            throw new SQLDataAccessException(String.format("Error: unable to update database: %s, %s", statement, e.getMessage()));
-        }
+    private void userExecuteUpdate(String statement, Object... params) throws SQLDataAccessException {
+        MySqlDAO.executeUpdate(statement, params);
     }
 }
