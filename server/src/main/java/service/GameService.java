@@ -6,6 +6,7 @@ import model.GameData;
 import request.JoinRequest;
 import request.NewGameRequest;
 import result.*;
+import exception.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;

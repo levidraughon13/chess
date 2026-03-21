@@ -4,6 +4,7 @@ import model.*;
 import request.*;
 import result.*;
 import dataaccess.*;
+import exception.*;
 
 public class UserService extends Service{
     private final UserDAO userDataAccess;

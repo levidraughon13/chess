@@ -2,6 +2,7 @@ package server;
 
 import com.google.gson.Gson;
 import dataaccess.*;
+import exception.*;
 
 import io.javalin.*;
 import io.javalin.http.Context;

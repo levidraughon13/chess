@@ -1,6 +1,7 @@
 package dataaccess;
 
 import model.AuthData;
+import exception.*;
 
 
 public interface AuthDAO {

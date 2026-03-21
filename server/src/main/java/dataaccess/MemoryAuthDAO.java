@@ -1,6 +1,7 @@
 package dataaccess;
 
 import model.AuthData;
+import exception.*;
 
 import java.util.HashMap;
 import java.util.UUID;
