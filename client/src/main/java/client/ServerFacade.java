@@ -3,6 +3,7 @@ package client;
 import com.google.gson.Gson;
 import model.*;
 import exception.*;
+import result.RegisterResult;
 
 import java.net.*;
 import java.net.http.*;
@@ -16,6 +17,13 @@ public class ServerFacade {
 
     public ServerFacade(String url) {
         this.serverUrl = url;
+    }
+
+    public RegisterResult register(UserData user) throws BadRequestException, DataAccessException {
+        var request = buildRequest("POST", "/user", user);
+        var response = sendRequest(request);
+        var result = handleResponse(response, AuthData.class );
+        return new RegisterResult(result.username(), result.authToken());
     }
 
     private HttpRequest buildRequest(String method, String path, Object body) {
