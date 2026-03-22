@@ -3,8 +3,13 @@ package client;
 import com.google.gson.Gson;
 import model.*;
 import exception.*;
-import result.RegisterResult;
+import request.JoinRequest;
+import request.LoginRequest;
+import request.LogoutRequest;
+import request.RegisterRequest;
+import result.*;
 
+import javax.xml.crypto.Data;
 import java.net.*;
 import java.net.http.*;
 import java.net.http.HttpRequest.BodyPublisher;
@@ -20,11 +25,39 @@ public class ServerFacade {
     }
 
     public RegisterResult register(UserData user) throws BadRequestException, DataAccessException {
-        var request = buildRequest("POST", "/user", user);
+        var request = buildRequest("POST", "/user", new RegisterRequest(user.username(), user.password(), user.email()));
         var response = sendRequest(request);
         var result = handleResponse(response, AuthData.class );
         return new RegisterResult(result.username(), result.authToken());
     }
+
+    /*
+    javalin.post("/session", this::login);
+        javalin.delete("/session", this::logout);
+        javalin.get("/game", this::listGames);
+        javalin.post("/game", this::createGame);
+        javalin.put("/game", this::joinGame);
+        javalin.delete("/db", this::clear);
+    */
+    public LoginResult login(String username, String password) throws DataAccessException {
+        var request = buildRequest("DELETE", "/session", new LoginRequest(username, password));
+        var response = sendRequest(request);
+        var result = handleResponse(response, AuthData.class);
+        return new LoginResult(result.username(), result.authToken());
+    }
+    public void logout(String authToken) throws DataAccessException {
+        var request = buildRequest("DELETE", "/session", authToken);
+        var response = sendRequest(request);
+        handleResponse(response, null);
+    }
+    //public GameList listGames(){}
+    //public NewGameResult createGame(){}
+    public void joinGame(String color, int gameID) throws DataAccessException {
+        var request = buildRequest("DELETE", "/session", new JoinRequest(color, gameID));
+        var response = sendRequest(request);
+        handleResponse(response, null);
+    }
+
 
     private HttpRequest buildRequest(String method, String path, Object body) {
         var request = HttpRequest.newBuilder()

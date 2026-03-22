@@ -31,4 +31,13 @@ public class ServerFacadeTests {
         assertTrue(authData.authToken().length() > 10);
     }
 
+    @Test
+    void login() throws Exception {
+
+    }
+
+    @Test
+    void logout() throws Exception {
+
+    }
 }
