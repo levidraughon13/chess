@@ -39,11 +39,23 @@ public class ServerFacadeTests {
     }
 
     @Test
+    void registerFailTest() throws Exception {
+        var authData = facade.register(new UserData("username", "password", "p1@email.com"));
+        facade.logout(authData.authToken());
+        assertThrows(Exception.class, () -> facade.register(new UserData("username", "p2", "e2")));
+    }
+
+    @Test
     void loginTest() throws Exception {
         var newUser = facade.register(new UserData("username", "password", "email"));
         facade.logout(newUser.authToken());
         var result = facade.login("username", "password");
         assertTrue(result.authToken().length() > 10);
+    }
+
+    @Test
+    void loginFailTest() {
+        assertThrows(Exception.class, () -> facade.login("username", "password"));
     }
 
     @Test
@@ -54,14 +66,21 @@ public class ServerFacadeTests {
     }
 
     @Test
-    void createGameTest() throws Exception {
+    void logoutFailTest() throws Exception {
         var newUser = facade.register(new UserData("username", "password", "email"));
-        var result = facade.createGame(newUser.authToken(),"game");
-        assertEquals(result.gameID(), 1);
+        facade.logout(newUser.authToken());
+        assertThrows(Exception.class, () -> facade.logout(newUser.authToken()));
     }
 
     @Test
-    void createGameFailTest() throws Exception {
+    void createGameTest() throws Exception {
+        var newUser = facade.register(new UserData("username", "password", "email"));
+        var result = facade.createGame(newUser.authToken(),"game");
+        assertEquals(1, result.gameID());
+    }
+
+    @Test
+    void createGameFailTest() {
         assertThrows(Exception.class, () -> facade.createGame("1234567","game"));
     }
 
@@ -76,6 +95,16 @@ public class ServerFacadeTests {
     }
 
     @Test
+    void joinGameFailTest() throws Exception {
+        var newUser = facade.register(new UserData("username", "password", "email"));
+        var game = facade.createGame(newUser.authToken(),"game");
+        facade.joinGame(newUser.authToken(), "WHITE", game.gameID());
+        facade.logout(newUser.authToken());
+        var newUser2 = facade.register(new UserData("username2", "password2", "email2"));
+        assertThrows(Exception.class, () -> facade.joinGame(newUser2.authToken(), "BLACK", game.gameID()+1));
+    }
+
+    @Test
     void listGamesTest() throws Exception {
         var newUser = facade.register(new UserData("username", "password", "email"));
         var game = facade.createGame(newUser.authToken(),"game");
@@ -86,6 +115,20 @@ public class ServerFacadeTests {
         facade.createGame(newUser2.authToken(),"game3");
         facade.createGame(newUser2.authToken(),"game4");
         var result = facade.listGames(newUser2.authToken());
-        assertTrue(2+2 == 4);
+        assertEquals(4, result.games().size());
+    }
+
+    @Test
+    void listGamesFailTest() throws Exception {
+        var newUser = facade.register(new UserData("username", "password", "email"));
+        var game = facade.createGame(newUser.authToken(),"game");
+        facade.joinGame(newUser.authToken(), "WHITE", game.gameID());
+        facade.createGame(newUser.authToken(),"game2");
+        facade.logout(newUser.authToken());
+        var newUser2 = facade.register(new UserData("username2", "password2", "email2"));
+        facade.createGame(newUser2.authToken(),"game3");
+        facade.createGame(newUser2.authToken(),"game4");
+        facade.logout(newUser2.authToken());
+        assertThrows(Exception.class, () -> facade.listGames(newUser2.authToken()));
     }
 }
