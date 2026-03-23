@@ -1,4 +1,5 @@
 import client.ServerFacade;
+import exception.DataAccessException;
 import model.UserData;
 import org.junit.jupiter.api.*;
 import server.Server;
@@ -24,6 +25,11 @@ public class ServerFacadeTests {
         server.stop();
     }
 
+    @BeforeEach
+    public void clear() throws DataAccessException {
+        facade.clear();
+    }
+
 
     @Test
     void register() throws Exception {
@@ -33,11 +39,29 @@ public class ServerFacadeTests {
 
     @Test
     void login() throws Exception {
-
+        var newUser = facade.register(new UserData("username", "password", "email"));
+        facade.logout(newUser.authToken());
+        var result = facade.login("username", "password");
+        assertTrue(result.authToken().length() > 10);
     }
 
     @Test
     void logout() throws Exception {
+
+    }
+
+    @Test
+    void createGame() throws Exception {
+
+    }
+
+    @Test
+    void joinGame() throws Exception {
+
+    }
+
+    @Test
+    void listGames() throws Exception {
 
     }
 }
