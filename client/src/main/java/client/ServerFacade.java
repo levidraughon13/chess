@@ -1,18 +1,15 @@
 package client;
 
 import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 import model.*;
 import exception.*;
 import request.*;
 import result.*;
 
-import java.lang.reflect.Type;
 import java.net.*;
 import java.net.http.*;
 import java.net.http.HttpRequest.BodyPublishers;
 import java.net.http.HttpResponse.BodyHandlers;
-import java.util.List;
 
 public class ServerFacade {
     private final HttpClient client = HttpClient.newHttpClient();
@@ -25,46 +22,42 @@ public class ServerFacade {
     public RegisterResult register(UserData user) throws DataAccessException {
         var request = buildRequest("POST", "/user", new RegisterRequest(user.username(), user.password(), user.email()), null);
         var response = sendRequest(request);
-        AuthData result = handleResponse(response, AuthData.class );
+        var result = handleResponse(response, AuthData.class );
         return new RegisterResult(result.username(), result.authToken());
     }
 
-    /*
-    javalin.post("/session", this::login);
-        javalin.delete("/session", this::logout);
-        javalin.get("/game", this::listGames);
-        javalin.post("/game", this::createGame);
-        javalin.put("/game", this::joinGame);
-        javalin.delete("/db", this::clear);
-    */
     public LoginResult login(String username, String password) throws DataAccessException {
         var request = buildRequest("POST", "/session", new LoginRequest(username, password), null);
         var response = sendRequest(request);
-        AuthData result = handleResponse(response, AuthData.class);
+        var result = handleResponse(response, AuthData.class);
         return new LoginResult(result.username(), result.authToken());
     }
+
     public void logout(String authToken) throws DataAccessException {
         var request = buildRequest("DELETE", "/session", null, authToken);
         var response = sendRequest(request);
         handleResponse(response, null);
     }
+
     public GameList listGames(String authToken) throws DataAccessException {
         var request = buildRequest("GET", "/game", null, authToken);
         var response = sendRequest(request);
-        List<GameInfo>  result = handleResponse(response, List.class);
-        return new GameList(result);
+        return handleResponse(response, GameList.class);
     }
-    public NewGameResult createGame(String name) throws DataAccessException {
-        var request = buildRequest("POST", "/game", new NewGameRequest(name), null);
+
+    public NewGameResult createGame(String authToken, String name) throws DataAccessException {
+        var request = buildRequest("POST", "/game", new NewGameRequest(name), authToken);
         var response = sendRequest(request);
-        GameData result = handleResponse(response, GameData.class);
+        var result = handleResponse(response, GameData.class);
         return new NewGameResult(result.gameID());
     }
-    public void joinGame(String color, int gameID) throws DataAccessException {
-        var request = buildRequest("PUT", "/game", new JoinRequest(color, gameID), null);
+
+    public void joinGame(String authToken, String color, int gameID) throws DataAccessException {
+        var request = buildRequest("PUT", "/game", new JoinRequest(color, gameID), authToken);
         var response = sendRequest(request);
         handleResponse(response, null);
     }
+
     public void clear() throws DataAccessException {
         var request = buildRequest("DELETE", "/db", null, null);
         var response = sendRequest(request);
