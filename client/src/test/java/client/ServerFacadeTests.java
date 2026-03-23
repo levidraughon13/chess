@@ -88,27 +88,27 @@ public class ServerFacadeTests {
     void joinGameTest() throws Exception {
         var newUser = facade.register(new UserData("username", "password", "email"));
         var game = facade.createGame(newUser.authToken(),"game");
-        facade.joinGame(newUser.authToken(), "WHITE", game.gameID());
+        facade.joinGame(newUser.authToken(), game.gameID(), "WHITE");
         facade.logout(newUser.authToken());
         var newUser2 = facade.register(new UserData("username2", "password2", "email2"));
-        assertThrows(Exception.class, () -> facade.joinGame(newUser2.authToken(), "WHITE", game.gameID()));
+        assertThrows(Exception.class, () -> facade.joinGame(newUser2.authToken(), game.gameID(), "WHITE"));
     }
 
     @Test
     void joinGameFailTest() throws Exception {
         var newUser = facade.register(new UserData("username", "password", "email"));
         var game = facade.createGame(newUser.authToken(),"game");
-        facade.joinGame(newUser.authToken(), "WHITE", game.gameID());
+        facade.joinGame(newUser.authToken(), game.gameID(), "WHITE");
         facade.logout(newUser.authToken());
         var newUser2 = facade.register(new UserData("username2", "password2", "email2"));
-        assertThrows(Exception.class, () -> facade.joinGame(newUser2.authToken(), "BLACK", game.gameID()+1));
+        assertThrows(Exception.class, () -> facade.joinGame(newUser2.authToken(), game.gameID()+1, "BLACK"));
     }
 
     @Test
     void listGamesTest() throws Exception {
         var newUser = facade.register(new UserData("username", "password", "email"));
         var game = facade.createGame(newUser.authToken(),"game");
-        facade.joinGame(newUser.authToken(), "WHITE", game.gameID());
+        facade.joinGame(newUser.authToken(), game.gameID(), "WHITE");
         facade.createGame(newUser.authToken(),"game2");
         facade.logout(newUser.authToken());
         var newUser2 = facade.register(new UserData("username2", "password2", "email2"));
@@ -122,7 +122,7 @@ public class ServerFacadeTests {
     void listGamesFailTest() throws Exception {
         var newUser = facade.register(new UserData("username", "password", "email"));
         var game = facade.createGame(newUser.authToken(),"game");
-        facade.joinGame(newUser.authToken(), "WHITE", game.gameID());
+        facade.joinGame(newUser.authToken(), game.gameID(), "WHITE");
         facade.createGame(newUser.authToken(),"game2");
         facade.logout(newUser.authToken());
         var newUser2 = facade.register(new UserData("username2", "password2", "email2"));

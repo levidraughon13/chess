@@ -50,7 +50,7 @@ public class PreLogClient {
                 default -> help();
             };
         } catch (Throwable ex) {
-            return ex.getMessage();
+            return ex.getMessage() + "\n" + help();
         }
     }
 
@@ -83,6 +83,7 @@ public class PreLogClient {
 
     private String help() {
         return """
+                Possible Commands:
                 - register <username> <password> <email>
                 - login <username> <password>
                 - quit

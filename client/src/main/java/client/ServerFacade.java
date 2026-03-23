@@ -52,7 +52,7 @@ public class ServerFacade {
         return new NewGameResult(result.gameID());
     }
 
-    public void joinGame(String authToken, String color, int gameID) throws DataAccessException {
+    public void joinGame(String authToken, int gameID, String color) throws DataAccessException {
         var request = buildRequest("PUT", "/game", new JoinRequest(color, gameID), authToken);
         var response = sendRequest(request);
         handleResponse(response, null);
@@ -90,7 +90,8 @@ public class ServerFacade {
         try {
             return client.send(request, BodyHandlers.ofString());
         } catch (Exception ex) {
-            throw new BadRequestException(ex.getMessage());
+            throw new BadRequestException("test");
+            //ex.getMessage()
         }
     }
 
@@ -99,7 +100,8 @@ public class ServerFacade {
         if (!isSuccessful(status)) {
             var body = response.body();
             if (body != null) {
-                throw new DataAccessException((String) new Gson().fromJson(response.body(), responseClass));
+                Response error = new Gson().fromJson(body, Response.class);
+                throw new DataAccessException(error.message());
             }
             throw new DataAccessException("other failure: " + status);
         }

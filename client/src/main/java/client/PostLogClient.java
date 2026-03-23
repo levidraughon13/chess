@@ -1,7 +1,6 @@
 package client;
 
 import exception.DataAccessException;
-import model.*;
 import result.*;
 
 import java.util.Arrays;
@@ -20,7 +19,7 @@ public class PostLogClient {
     }
 
     public String run() {
-        System.out.println(" Login successful!");
+        System.out.println(" Login successful, welcome " + username + "!");
         System.out.print(help());
 
         Scanner scanner = new Scanner(System.in);
@@ -42,11 +41,12 @@ public class PostLogClient {
 
     private String help() {
         return """
-                - newGame <gameName>
-                - joinGame <teamColor> <gameID>
-                - listGames
+                Possible Commands:
+                - newGame <gameName> - create a new game
+                - joinGame <gameID> [WHITE or BLACK] - join an existing game
+                - listGames - list all games
                 - logout
-                - quit
+                - quit - exit program
                 """;
     }
 
@@ -58,7 +58,7 @@ public class PostLogClient {
             return switch (cmd) {
                 case "newGame" -> createGame(params);
                 case "joinGame" -> joinGame(params);
-                case "listGames" -> listGames(params);
+                case "listGames" -> listGames();
                 case "logout" -> logout();
                 case "quit" -> "quit";
                 default -> help();
@@ -70,18 +70,18 @@ public class PostLogClient {
 
     private String createGame(String[] params) throws DataAccessException {
         NewGameResult game = server.createGame(authToken, params[0]);
-        return "New game " + params[0] + " created with game ID " + game.gameID().toString();
+        return String.format("New game %s created with game ID %d", params[0], game.gameID());
     }
 
     private String joinGame(String[] params) throws DataAccessException {
-        server.joinGame(authToken, params[0], Integer.parseInt(params[1]));
+        server.joinGame(authToken, Integer.parseInt(params[0]), params[1]);
         return null;
     }
 
-    private String listGames(String[] params) throws DataAccessException {
+    private String listGames() throws DataAccessException {
         GameList gameList = server.listGames(authToken);
         List<GameInfo> games = gameList.games();
-        StringBuilder result = new StringBuilder("| Index | White Team | BlackTeam | Game Name |");
+        StringBuilder result = new StringBuilder("| Index | White Team | Black Team | Name |");
         for (int i = 0; i < games.size(); i++){
             GameInfo game = games.get(i);
             result.append(String.format("\n| %d | %s | %s | %s |", i + 1, game.whiteUsername(), game.blackUsername(), game.gameName()));
