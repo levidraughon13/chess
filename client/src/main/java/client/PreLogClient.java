@@ -1,14 +1,20 @@
 package client;
 
 import java.util.Arrays;
+import java.util.Objects;
 import java.util.Scanner;
+
+import exception.BadRequestException;
+import exception.DataAccessException;
+import model.*;
+import result.RegisterResult;
 import ui.EscapeSequences;
 
 public class PreLogClient {
     private final ServerFacade server;
 
     public PreLogClient(String serverUrl) {
-        server = new ServerFacade(serverUrl);
+        this.server = new ServerFacade(serverUrl);
     }
 
     public void run() {
@@ -52,7 +58,20 @@ public class PreLogClient {
     }
 
     private String register(String[] params) {
-        return null;
+        try {
+            if (params.length == 3) {
+                RegisterResult auth = server.register(new UserData(params[0], params[1], params[2]));
+                String result = new PostLogClient(server, auth.authToken(), auth.username()).run();
+                if (Objects.equals(result, "quit")) {
+                    server.logout(auth.authToken());
+                    return "quit";
+                }
+                return "Logout Successful";
+            }
+            throw new BadRequestException("Error: expected <username> <password> <email>");
+        } catch (Throwable ex) {
+            return ex.getMessage();
+        }
     }
 
     private String help() {
