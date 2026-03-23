@@ -7,6 +7,7 @@ import java.util.Scanner;
 import exception.BadRequestException;
 import exception.DataAccessException;
 import model.*;
+import result.LoginResult;
 import result.RegisterResult;
 import ui.EscapeSequences;
 
@@ -53,14 +54,9 @@ public class PreLogClient {
         }
     }
 
-    private String login(String[] params) {
-        return null;
-    }
-
-    private String register(String[] params) {
-        try {
-            if (params.length == 3) {
-                RegisterResult auth = server.register(new UserData(params[0], params[1], params[2]));
+    private String login(String[] params) throws DataAccessException {
+        if (params.length == 2) {
+                LoginResult auth = server.login(params[0], params[1]);
                 String result = new PostLogClient(server, auth.authToken(), auth.username()).run();
                 if (Objects.equals(result, "quit")) {
                     server.logout(auth.authToken());
@@ -68,10 +64,21 @@ public class PreLogClient {
                 }
                 return "Logout Successful";
             }
-            throw new BadRequestException("Error: expected <username> <password> <email>");
-        } catch (Throwable ex) {
-            return ex.getMessage();
+        throw new BadRequestException("Error: expected <username> <password>");
+    }
+
+    private String register(String[] params) throws DataAccessException {
+        if (params.length == 3) {
+            RegisterResult auth = server.register(new UserData(params[0], params[1], params[2]));
+            String result = new PostLogClient(server, auth.authToken(), auth.username()).run();
+            if (Objects.equals(result, "quit")) {
+                server.logout(auth.authToken());
+                return "quit";
+            }
+            return "Logout Successful";
         }
+        throw new BadRequestException("Error: expected <username> <password> <email>");
+
     }
 
     private String help() {
