@@ -75,7 +75,7 @@ public class PreLogClient {
                 server.logout(auth.authToken());
                 return "quit";
             }
-            return "Logout Successful";
+            return "\nLogout Successful\n";
         }
         throw new BadRequestException("Error: expected <username> <password> <email>");
 

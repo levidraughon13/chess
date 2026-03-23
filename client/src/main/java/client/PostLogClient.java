@@ -42,9 +42,9 @@ public class PostLogClient {
     private String help() {
         return """
                 Possible Commands:
-                - newGame <gameName> - create a new game
-                - joinGame <gameID> [WHITE or BLACK] - join an existing game
-                - listGames - list all games
+                - create <gameName> - create a new game
+                - join <gameID> [WHITE or BLACK] - join an existing game
+                - list - list all games
                 - logout
                 - quit - exit program
                 """;
@@ -56,9 +56,9 @@ public class PostLogClient {
             String cmd = (tokens.length > 0) ? tokens[0] : "help";
             String[] params = Arrays.copyOfRange(tokens, 1, tokens.length);
             return switch (cmd) {
-                case "newGame" -> createGame(params);
-                case "joinGame" -> joinGame(params);
-                case "listGames" -> listGames();
+                case "create" -> createGame(params);
+                case "join" -> joinGame(params);
+                case "list" -> listGames();
                 case "logout" -> logout();
                 case "quit" -> "quit";
                 default -> help();
