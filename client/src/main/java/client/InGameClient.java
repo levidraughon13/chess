@@ -22,7 +22,7 @@ public class InGameClient {
 
         Scanner scanner = new Scanner(System.in);
         var result = "";
-        while (!result.equals("leave")) {
+        while (!result.equals("leave") && !result.equals("resign")) {
 
             String line = scanner.nextLine();
 
