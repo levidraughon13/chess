@@ -1,31 +1,32 @@
 package client;
 
 import ui.EscapeSequences;
-import ui.EscapeSequences.*;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.Scanner;
 
 public class InGameClient {
     private final ServerFacade server;
     private final String authToken;
+    private final String team;
 
 
-    public InGameClient(ServerFacade server, String authToken) {
+    public InGameClient(ServerFacade server, String authToken, String color) {
         this.server = server;
         this.authToken = authToken;
+        this.team = color;
     }
 
-    public String run() {
+    public void run() {
         System.out.println(" ");
         System.out.print(printInitialBoard());
         System.out.print(help());
 
         Scanner scanner = new Scanner(System.in);
         var result = "";
-        while (!result.equals("exit")) {
+        while (!result.equals("leave")) {
 
             String line = scanner.nextLine();
 
@@ -37,7 +38,6 @@ public class InGameClient {
                 System.out.print(msg);
             }
         }
-        return result;
     }
 
 
@@ -47,7 +47,7 @@ public class InGameClient {
             String cmd = (tokens.length > 0) ? tokens[0] : "help";
             String[] params = Arrays.copyOfRange(tokens, 1, tokens.length);
             return switch (cmd) {
-                case "exit" -> "exit";
+                case "leave" -> "leave";
                 default -> help();
             };
         } catch (Throwable ex) {
@@ -56,100 +56,114 @@ public class InGameClient {
     }
 
     public String printInitialBoard() {
-        String board = EscapeSequences.SET_BG_COLOR_LIGHT_GREY + EscapeSequences.EMPTY + " " + EscapeSequences.EMPTY + EscapeSequences.SET_TEXT_BOLD;
-        List<String> letters = List.of("A", "B", "C", "D" , "E", "F", "G", "H");
-        List<String> backPieces = List.of("R", "N", "B", "Q", "K", "B", "N", "R");
-
-        for (int i = 0; i < letters.size(); i++){
-            board += EscapeSequences.EMPTY + letters.get(i) + EscapeSequences.EMPTY;
+        StringBuilder board = new StringBuilder(EscapeSequences.SET_TEXT_BOLD);
+        String team1;
+        String team2;
+        if (Objects.equals(team, "BLACK")){
+            team1 = EscapeSequences.SET_TEXT_COLOR_BLUE;
+            team2 = EscapeSequences.SET_TEXT_COLOR_GREEN;
+        } else {
+            team1 = EscapeSequences.SET_TEXT_COLOR_GREEN;
+            team2 = EscapeSequences.SET_TEXT_COLOR_BLUE;
         }
 
-        board += (EscapeSequences.EMPTY + " " + EscapeSequences.EMPTY + EscapeSequences.RESET_BG_COLOR + "\n") +
-                (EscapeSequences.SET_BG_COLOR_LIGHT_GREY + EscapeSequences.EMPTY + "8" + EscapeSequences.EMPTY + EscapeSequences.SET_TEXT_COLOR_BLUE);
-        for (int i = 0; i < backPieces.size(); i++){
-            if ((i % 2) == 0){
-                board += EscapeSequences.SET_BG_COLOR_WHITE;
-            }
-            else {
-                board += EscapeSequences.SET_BG_COLOR_BLACK;
-            }
-            board += EscapeSequences.EMPTY + backPieces.get(i) + EscapeSequences.EMPTY;
-        }
-        board += (EscapeSequences.SET_BG_COLOR_LIGHT_GREY + EscapeSequences.RESET_TEXT_COLOR + EscapeSequences.EMPTY + "8" + EscapeSequences.EMPTY + EscapeSequences.RESET_BG_COLOR) +
-                (EscapeSequences.EMPTY + "   " + EscapeSequences.EMPTY + EscapeSequences.RESET_BG_COLOR + "\n");
+        List<String> letters = List.of(" A ", " B ", " C ", " D " , " E ", " F ", " G ", " H ");
+        List<String> backPieces = List.of(" R ", " N ", " B ", " Q ", " K ", " B ", " N ", " R ");
+        List<String> numbers = List.of(" 1 ", " 2 ", " 3 ", " 4 ", " 5 ", " 6 ", " 7 ", " 8 ");
 
-        board += (EscapeSequences.SET_BG_COLOR_LIGHT_GREY + EscapeSequences.EMPTY + "7" + EscapeSequences.EMPTY + EscapeSequences.SET_TEXT_COLOR_BLUE);
+
+        if (Objects.equals(team, "BLACK")) {
+            letters = letters.reversed();
+            backPieces = backPieces.reversed();
+            numbers = numbers.reversed();
+        }
+
+        letterRow(board, letters);
+
+        board.append(EscapeSequences.SET_BG_COLOR_LIGHT_GREY).append(numbers.getLast()).append(team2);
+
+        backRow(board, backPieces, 0);
+
+        board.append(EscapeSequences.SET_BG_COLOR_LIGHT_GREY + EscapeSequences.RESET_TEXT_COLOR).append(numbers.getLast()).append(EscapeSequences.RESET_BG_COLOR).append("\n");
+
+        board.append(EscapeSequences.SET_BG_COLOR_LIGHT_GREY).append(numbers.get(numbers.size() - 2)).append(team2);
         for (int i = 0; i < 8; i++){
-            if ((i % 2) == 0){
-                board += EscapeSequences.SET_BG_COLOR_BLACK;
-            }
-            else {
-                board += EscapeSequences.SET_BG_COLOR_WHITE;
-            }
-            board += EscapeSequences.EMPTY + "P" + EscapeSequences.EMPTY;
+            setSquareColor(i+1, board);
+            board.append(" P ");
         }
-        board += (EscapeSequences.SET_BG_COLOR_LIGHT_GREY + EscapeSequences.RESET_TEXT_COLOR + EscapeSequences.EMPTY + "7" + EscapeSequences.EMPTY + EscapeSequences.RESET_BG_COLOR + "\n");
-        for (int i = 6; i > 2; i--){
-            board += (EscapeSequences.SET_BG_COLOR_LIGHT_GREY + EscapeSequences.EMPTY + i + EscapeSequences.EMPTY);
+
+        board.append(EscapeSequences.SET_BG_COLOR_LIGHT_GREY).append(EscapeSequences.RESET_TEXT_COLOR).append(numbers.get(numbers.size() - 2)).append(EscapeSequences.RESET_BG_COLOR).append("\n");
+
+        middleRows(board, numbers);
+
+        board.append(EscapeSequences.SET_BG_COLOR_LIGHT_GREY).append(numbers.get(1)).append(team1);
+        for (int i = 0; i < 8; i++){
+            setSquareColor(i, board);
+            board.append(" P ");
+        }
+
+        board.append(EscapeSequences.SET_BG_COLOR_LIGHT_GREY + EscapeSequences.RESET_TEXT_COLOR).append(numbers.get(1)).append(EscapeSequences.RESET_BG_COLOR).append("\n");
+
+        board.append(EscapeSequences.SET_BG_COLOR_LIGHT_GREY).append(numbers.getFirst()).append(team1);
+
+        backRow(board, backPieces, 1);
+
+        board.append(EscapeSequences.SET_BG_COLOR_LIGHT_GREY + EscapeSequences.RESET_TEXT_COLOR).append(numbers.getFirst()).append(EscapeSequences.RESET_BG_COLOR).append(EscapeSequences.RESET_BG_COLOR).append("\n");
+
+        letterRow(board, letters);
+
+        board.append(EscapeSequences.RESET_BG_COLOR + "\n" + EscapeSequences.RESET_TEXT_BOLD_FAINT);
+
+        return board.toString();
+    }
+
+    private void letterRow(StringBuilder board, List<String> letters){
+        board.append(EscapeSequences.SET_BG_COLOR_LIGHT_GREY + "   ");
+        for (String letter : letters) {
+            board.append(letter);
+        }
+        board.append("   " + EscapeSequences.RESET_BG_COLOR + "\n");
+    }
+
+    private void backRow(StringBuilder board, List<String> backPieces, int colorSign){
+        for (String backPiece : backPieces) {
+            setSquareColor(colorSign, board);
+            board.append(backPiece);
+            colorSign++;
+        }
+    }
+
+    private void middleRows(StringBuilder board, List<String> numbers) {
+        for (int i = 5; i > 1; i--){
+            board.append(EscapeSequences.SET_BG_COLOR_LIGHT_GREY).append(numbers.get(i));
             for (int j = 0; j < 8; j++){
                 if ((i%2) == 0){
-                    if ((j%2) == 0) {
-                        board += EscapeSequences.SET_BG_COLOR_WHITE;
-                    } else {
-                        board += EscapeSequences.SET_BG_COLOR_BLACK;
-                    }
+                    setSquareColor(j+1, board);
                 } else {
-                    if ((j%2) == 0) {
-                        board += EscapeSequences.SET_BG_COLOR_BLACK;
-                    } else {
-                        board += EscapeSequences.SET_BG_COLOR_WHITE;
-                    }
+                    setSquareColor(j, board);
                 }
-                board += EscapeSequences.EMPTY + " " + EscapeSequences.EMPTY;
+                board.append("   ");
             }
-            board += ( EscapeSequences.SET_BG_COLOR_LIGHT_GREY + EscapeSequences.EMPTY + i + EscapeSequences.EMPTY + EscapeSequences.RESET_BG_COLOR + "\n");
+            board.append(EscapeSequences.SET_BG_COLOR_LIGHT_GREY)
+                    .append(numbers.get(i))
+                    .append(EscapeSequences.RESET_BG_COLOR).append("\n");
         }
+    }
 
-        board += (EscapeSequences.SET_BG_COLOR_LIGHT_GREY + EscapeSequences.EMPTY + "2" + EscapeSequences.EMPTY + EscapeSequences.SET_TEXT_COLOR_GREEN);
-        for (int i = 0; i < 8; i++){
-            if ((i % 2) == 0){
-                board += EscapeSequences.SET_BG_COLOR_WHITE;
-            }
-            else {
-                board += EscapeSequences.SET_BG_COLOR_BLACK;
-            }
-            board += EscapeSequences.EMPTY + "P" + EscapeSequences.EMPTY;
+    private void setSquareColor(int i, StringBuilder board){
+        if ((i % 2) == 0){
+            board.append(EscapeSequences.SET_BG_COLOR_WHITE);
         }
-        board += (EscapeSequences.SET_BG_COLOR_LIGHT_GREY + EscapeSequences.RESET_TEXT_COLOR + EscapeSequences.EMPTY + "2" + EscapeSequences.EMPTY + EscapeSequences.RESET_BG_COLOR + "\n");
-
-
-        board += (EscapeSequences.SET_BG_COLOR_LIGHT_GREY + EscapeSequences.EMPTY + "1" + EscapeSequences.EMPTY + EscapeSequences.SET_TEXT_COLOR_GREEN);
-        for (int i = 0; i < backPieces.size(); i++){
-            if ((i % 2) == 0){
-                board += EscapeSequences.SET_BG_COLOR_BLACK;
-            }
-            else {
-                board += EscapeSequences.SET_BG_COLOR_WHITE;
-            }
-            board += EscapeSequences.EMPTY + backPieces.get(i) + EscapeSequences.EMPTY;
+        else {
+            board.append(EscapeSequences.SET_BG_COLOR_BLACK);
         }
-        board += (EscapeSequences.SET_BG_COLOR_LIGHT_GREY + EscapeSequences.RESET_TEXT_COLOR + EscapeSequences.EMPTY + "1" + EscapeSequences.EMPTY + EscapeSequences.RESET_BG_COLOR) +
-                (EscapeSequences.EMPTY + " " + EscapeSequences.EMPTY + EscapeSequences.RESET_BG_COLOR + "\n");
-
-        board += (EscapeSequences.SET_BG_COLOR_LIGHT_GREY + EscapeSequences.EMPTY + " " + EscapeSequences.EMPTY);
-        for (int i = 0; i < letters.size(); i++){
-            board += EscapeSequences.EMPTY + letters.get(i) + EscapeSequences.EMPTY;
-        }
-        board += (EscapeSequences.EMPTY + " " + EscapeSequences.EMPTY + EscapeSequences.RESET_BG_COLOR + "\n" + EscapeSequences.RESET_TEXT_BOLD_FAINT);
-
-        return board;
     }
 
     private String help() {
         return """
                 Possible Commands:
-                  exit - exit game
-                                 
+                  leave - exit game
+                  help - see possible commands
                 """;
     }
 }

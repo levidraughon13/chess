@@ -83,7 +83,7 @@ public class PostLogClient {
     private String joinGame(String[] params) throws DataAccessException {
         server.joinGame(authToken, Integer.parseInt(params[0]), params[1].toUpperCase());
         System.out.printf("Successfully joined game %d as %s \n", Integer.parseInt(params[0]), params[1].toLowerCase());
-        new InGameClient(server, authToken).run();
+        new InGameClient(server, authToken, params[1].toUpperCase()).run();
         return "Game exited";
     }
 
