@@ -9,7 +9,7 @@ import exception.DataAccessException;
 import model.*;
 import result.LoginResult;
 import result.RegisterResult;
-import ui.EscapeSequences;
+
 
 public class PreLogClient {
     private final ServerFacade server;
@@ -60,11 +60,11 @@ public class PreLogClient {
                 String result = new PostLogClient(server, auth.authToken(), auth.username()).run();
                 if (Objects.equals(result, "quit")) {
                     server.logout(auth.authToken());
-                    return "quit";
+                    return "quit\n";
                 }
-                return "Logout Successful";
+                return "Logout Successful\n" + help();
             }
-        throw new BadRequestException("Error: expected <username> <password>");
+        throw new BadRequestException("Error: expected <username> <password>\n");
     }
 
     private String register(String[] params) throws DataAccessException {
@@ -73,20 +73,22 @@ public class PreLogClient {
             String result = new PostLogClient(server, auth.authToken(), auth.username()).run();
             if (Objects.equals(result, "quit")) {
                 server.logout(auth.authToken());
-                return "quit";
+                return "quit\n";
             }
-            return "\nLogout Successful\n";
+            return "\nLogout Successful\n" + help();
         }
-        throw new BadRequestException("Error: expected <username> <password> <email>");
+        throw new BadRequestException("Error: expected <username> <password> <email>\n");
 
     }
 
     private String help() {
         return """
                 Possible Commands:
-                - register <username> <password> <email>
-                - login <username> <password>
-                - quit
+                  register <username> <password> <email> - for new users
+                  login <username> <password> - for existing users
+                  quit - exit program
+                  help - see possible commands
+                
                 """;
     }
 }

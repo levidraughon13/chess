@@ -90,8 +90,7 @@ public class ServerFacade {
         try {
             return client.send(request, BodyHandlers.ofString());
         } catch (Exception ex) {
-            throw new BadRequestException("test");
-            //ex.getMessage()
+            throw new BadRequestException(ex.getMessage());
         }
     }
 
@@ -101,7 +100,7 @@ public class ServerFacade {
             var body = response.body();
             if (body != null) {
                 Response error = new Gson().fromJson(body, Response.class);
-                throw new DataAccessException(error.message());
+                throw new DataAccessException(error.message() + "\n");
             }
             throw new DataAccessException("other failure: " + status);
         }

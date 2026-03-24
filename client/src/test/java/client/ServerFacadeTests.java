@@ -1,3 +1,4 @@
+import client.InGameClient;
 import client.ServerFacade;
 import exception.DataAccessException;
 import model.UserData;
@@ -130,5 +131,11 @@ public class ServerFacadeTests {
         facade.createGame(newUser2.authToken(),"game4");
         facade.logout(newUser2.authToken());
         assertThrows(Exception.class, () -> facade.listGames(newUser2.authToken()));
+    }
+
+    @Test
+    void print() {
+        InGameClient testClient = new InGameClient(facade, "1");
+        System.out.print(testClient.printInitialBoard());
     }
 }

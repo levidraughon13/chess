@@ -42,11 +42,13 @@ public class PostLogClient {
     private String help() {
         return """
                 Possible Commands:
-                - create <gameName> - create a new game
-                - join <gameID> [WHITE or BLACK] - join an existing game
-                - list - list all games
-                - logout
-                - quit - exit program
+                  create <gameName> - create a new game
+                  join <gameID> [WHITE or BLACK] - join an existing game
+                  list - list all games
+                  logout - sign out
+                  quit - sign out and exit program
+                  help - see possible commands
+                
                 """;
     }
 
@@ -58,6 +60,7 @@ public class PostLogClient {
             return switch (cmd) {
                 case "create" -> createGame(params);
                 case "join" -> joinGame(params);
+                case "observe" -> observeGame(params);
                 case "list" -> listGames();
                 case "logout" -> logout();
                 case "quit" -> "quit";
@@ -68,23 +71,29 @@ public class PostLogClient {
         }
     }
 
+    private String observeGame(String[] params) {
+        return null;
+    }
+
     private String createGame(String[] params) throws DataAccessException {
         NewGameResult game = server.createGame(authToken, params[0]);
-        return String.format("New game %s created with game ID %d", params[0], game.gameID());
+        return String.format("New game %s created with game ID %d \n", params[0], game.gameID());
     }
 
     private String joinGame(String[] params) throws DataAccessException {
-        server.joinGame(authToken, Integer.parseInt(params[0]), params[1]);
-        return null;
+        server.joinGame(authToken, Integer.parseInt(params[0]), params[1].toUpperCase());
+        System.out.printf("Successfully joined game %d as %s \n", Integer.parseInt(params[0]), params[1].toLowerCase());
+        new InGameClient(server, authToken).run();
+        return "Game exited";
     }
 
     private String listGames() throws DataAccessException {
         GameList gameList = server.listGames(authToken);
         List<GameInfo> games = gameList.games();
-        StringBuilder result = new StringBuilder("| Index | White Team | Black Team | Name |");
+        StringBuilder result = new StringBuilder("| Index | White Team | Black Team | Name |\n");
         for (int i = 0; i < games.size(); i++){
             GameInfo game = games.get(i);
-            result.append(String.format("\n| %d | %s | %s | %s |", i + 1, game.whiteUsername(), game.blackUsername(), game.gameName()));
+            result.append(String.format("| %d | %s | %s | %s |\n", i + 1, game.whiteUsername(), game.blackUsername(), game.gameName()));
         }
         return result.toString();
     }
