@@ -80,7 +80,8 @@ public class InGameClient {
 
         backRow(board, backPieces, 0);
 
-        board.append(EscapeSequences.SET_BG_COLOR_LIGHT_GREY + EscapeSequences.RESET_TEXT_COLOR).append(numbers.getLast()).append(EscapeSequences.RESET_BG_COLOR).append("\n");
+        board.append(EscapeSequences.SET_BG_COLOR_LIGHT_GREY + EscapeSequences.RESET_TEXT_COLOR)
+                .append(numbers.getLast()).append(EscapeSequences.RESET_BG_COLOR).append("\n");
 
         board.append(EscapeSequences.SET_BG_COLOR_LIGHT_GREY).append(numbers.get(numbers.size() - 2)).append(team2);
         for (int i = 0; i < 8; i++){
@@ -88,7 +89,8 @@ public class InGameClient {
             board.append(" P ");
         }
 
-        board.append(EscapeSequences.SET_BG_COLOR_LIGHT_GREY).append(EscapeSequences.RESET_TEXT_COLOR).append(numbers.get(numbers.size() - 2)).append(EscapeSequences.RESET_BG_COLOR).append("\n");
+        board.append(EscapeSequences.SET_BG_COLOR_LIGHT_GREY).append(EscapeSequences.RESET_TEXT_COLOR)
+                .append(numbers.get(numbers.size() - 2)).append(EscapeSequences.RESET_BG_COLOR).append("\n");
 
         middleRows(board, numbers);
 
@@ -98,13 +100,15 @@ public class InGameClient {
             board.append(" P ");
         }
 
-        board.append(EscapeSequences.SET_BG_COLOR_LIGHT_GREY + EscapeSequences.RESET_TEXT_COLOR).append(numbers.get(1)).append(EscapeSequences.RESET_BG_COLOR).append("\n");
+        board.append(EscapeSequences.SET_BG_COLOR_LIGHT_GREY + EscapeSequences.RESET_TEXT_COLOR)
+                .append(numbers.get(1)).append(EscapeSequences.RESET_BG_COLOR).append("\n");
 
         board.append(EscapeSequences.SET_BG_COLOR_LIGHT_GREY).append(numbers.getFirst()).append(team1);
 
         backRow(board, backPieces, 1);
 
-        board.append(EscapeSequences.SET_BG_COLOR_LIGHT_GREY + EscapeSequences.RESET_TEXT_COLOR).append(numbers.getFirst()).append(EscapeSequences.RESET_BG_COLOR).append(EscapeSequences.RESET_BG_COLOR).append("\n");
+        board.append(EscapeSequences.SET_BG_COLOR_LIGHT_GREY + EscapeSequences.RESET_TEXT_COLOR)
+                .append(numbers.getFirst()).append(EscapeSequences.RESET_BG_COLOR).append(EscapeSequences.RESET_BG_COLOR).append("\n");
 
         letterRow(board, letters);
 

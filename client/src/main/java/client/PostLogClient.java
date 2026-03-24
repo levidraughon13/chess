@@ -80,7 +80,9 @@ public class PostLogClient {
     private String listGames() throws DataAccessException {
         GameList gameList = server.listGames(authToken);
         List<GameInfo> games = gameList.games();
-        StringBuilder result = new StringBuilder(String.format(EscapeSequences.SET_BG_COLOR_MAGENTA+"| %-5s | %-20s | %-20s | %-20s |" + EscapeSequences.RESET_BG_COLOR + "\n", "Index", "White Team", "Black Team", "Name"));
+        StringBuilder result = new StringBuilder(String.format(EscapeSequences.SET_BG_COLOR_MAGENTA+
+                "| %-5s | %-20s | %-20s | %-20s |" + EscapeSequences.RESET_BG_COLOR + "\n",
+                "Index", "White Team", "Black Team", "Name"));
         for (int i = 0; i < games.size(); i++){
             GameInfo game = games.get(i);
             result.append(String.format("| %-5s | %-20s | %-20s | %-20s |\n", i + 1, game.whiteUsername(), game.blackUsername(), game.gameName()));
