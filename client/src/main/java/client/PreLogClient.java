@@ -73,7 +73,8 @@ public class PreLogClient {
             String result = new PostLogClient(server, auth.authToken(), auth.username()).run();
             if (Objects.equals(result, "quit")) {
                 server.logout(auth.authToken());
-                return "quit\n";
+                System.out.println("  ");
+                return "quit";
             }
             return "\nLogout Successful\n" + help();
         }

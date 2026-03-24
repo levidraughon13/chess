@@ -12,7 +12,7 @@ public class InGameClient {
 
 
     public InGameClient(String color) {
-        this.team = color;
+        this.team = color; //remember that if the color == "observer", different commands should be shown below
     }
 
     public void run() {
