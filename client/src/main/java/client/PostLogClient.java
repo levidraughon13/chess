@@ -2,6 +2,7 @@ package client;
 
 import exception.DataAccessException;
 import result.*;
+import ui.EscapeSequences;
 
 import java.util.Arrays;
 import java.util.List;
@@ -30,7 +31,7 @@ public class PostLogClient {
 
             try {
                 result = eval(line);
-                System.out.print(result);
+                System.out.print(result + "\n");
             } catch (Throwable e) {
                 var msg = e.toString();
                 System.out.print(msg);
@@ -39,18 +40,7 @@ public class PostLogClient {
         return result;
     }
 
-    private String help() {
-        return """
-                Possible Commands:
-                  create <gameName> - create a new game
-                  join <gameID> [WHITE or BLACK] - join an existing game
-                  list - list all games
-                  logout - sign out
-                  quit - sign out and exit program
-                  help - see possible commands
-                
-                """;
-    }
+
 
     private String eval(String input) {
         try {
@@ -72,35 +62,48 @@ public class PostLogClient {
     }
 
     private String observeGame(String[] params) {
-        return null;
+        return "Observing game" + params[0];
     }
 
     private String createGame(String[] params) throws DataAccessException {
         NewGameResult game = server.createGame(authToken, params[0]);
-        return String.format("New game %s created with game ID %d \n", params[0], game.gameID());
+        return String.format("\nNew game '%s' created with game ID %d \n", params[0], game.gameID());
     }
 
     private String joinGame(String[] params) throws DataAccessException {
         server.joinGame(authToken, Integer.parseInt(params[0]), params[1].toUpperCase());
-        System.out.printf("Successfully joined game %d as %s \n", Integer.parseInt(params[0]), params[1].toLowerCase());
-        new InGameClient(server, authToken, params[1].toUpperCase()).run();
-        return "Game exited";
+        System.out.printf("\nSuccessfully joined game %d as %s \n", Integer.parseInt(params[0]), params[1].toLowerCase());
+        new InGameClient(params[1].toUpperCase()).run();
+        return "\nGame exited\n";
     }
 
     private String listGames() throws DataAccessException {
         GameList gameList = server.listGames(authToken);
         List<GameInfo> games = gameList.games();
-        StringBuilder result = new StringBuilder("| Index | White Team | Black Team | Name |\n");
+        StringBuilder result = new StringBuilder(String.format(EscapeSequences.SET_BG_COLOR_MAGENTA+"| %-5s | %-20s | %-20s | %-20s |" + EscapeSequences.RESET_BG_COLOR + "\n", "Index", "White Team", "Black Team", "Name"));
         for (int i = 0; i < games.size(); i++){
             GameInfo game = games.get(i);
-            result.append(String.format("| %d | %s | %s | %s |\n", i + 1, game.whiteUsername(), game.blackUsername(), game.gameName()));
+            result.append(String.format("| %-5s | %-20s | %-20s | %-20s |\n", i + 1, game.whiteUsername(), game.blackUsername(), game.gameName()));
         }
-        return result.toString();
+        return result.toString() + "\n";
     }
 
     private String logout() throws DataAccessException {
         server.logout(authToken);
         return "logout";
+    }
+
+    private String help() {
+        return """
+                \nPossible Commands:
+                  create <gameName> - create a new game
+                  join <gameID> [WHITE or BLACK] - join an existing game
+                  list - list all games
+                  logout - sign out
+                  quit - sign out and exit program
+                  help - see possible commands
+                
+                """;
     }
 
 }

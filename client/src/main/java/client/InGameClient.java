@@ -8,14 +8,10 @@ import java.util.Objects;
 import java.util.Scanner;
 
 public class InGameClient {
-    private final ServerFacade server;
-    private final String authToken;
     private final String team;
 
 
-    public InGameClient(ServerFacade server, String authToken, String color) {
-        this.server = server;
-        this.authToken = authToken;
+    public InGameClient(String color) {
         this.team = color;
     }
 

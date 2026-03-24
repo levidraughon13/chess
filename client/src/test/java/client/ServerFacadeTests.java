@@ -135,7 +135,7 @@ public class ServerFacadeTests {
 
     @Test
     void print() {
-        InGameClient testClient = new InGameClient(facade, "1", "BLACK");
+        InGameClient testClient = new InGameClient("BLACK");
         System.out.print(testClient.printInitialBoard());
     }
 }

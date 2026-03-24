@@ -23,6 +23,7 @@ public class ServerFacade {
         var request = buildRequest("POST", "/user", new RegisterRequest(user.username(), user.password(), user.email()), null);
         var response = sendRequest(request);
         var result = handleResponse(response, AuthData.class );
+        assert result != null;
         return new RegisterResult(result.username(), result.authToken());
     }
 
@@ -30,6 +31,7 @@ public class ServerFacade {
         var request = buildRequest("POST", "/session", new LoginRequest(username, password), null);
         var response = sendRequest(request);
         var result = handleResponse(response, AuthData.class);
+        assert result != null;
         return new LoginResult(result.username(), result.authToken());
     }
 
@@ -49,6 +51,7 @@ public class ServerFacade {
         var request = buildRequest("POST", "/game", new NewGameRequest(name), authToken);
         var response = sendRequest(request);
         var result = handleResponse(response, GameData.class);
+        assert result != null;
         return new NewGameResult(result.gameID());
     }
 
