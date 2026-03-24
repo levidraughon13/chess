@@ -1,4 +1,5 @@
-import client.ServerFacade;
+package client;
+
 import exception.DataAccessException;
 import model.UserData;
 import org.junit.jupiter.api.*;
@@ -31,10 +32,6 @@ public class ServerFacadeTests {
         facade.clear();
     }
 
-    @Test
-    public void sampleTest() {
-        Assertions.assertTrue(true);
-    }
 
     @Test
     void registerTest() throws Exception {
