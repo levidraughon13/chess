@@ -5,7 +5,6 @@ import exception.DataAccessException;
 import result.*;
 import ui.EscapeSequences;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
@@ -14,8 +13,6 @@ public class PostLogClient {
     private final ServerFacade server;
     private final String authToken;
     private final String username;
-    private final List<GameInfo> games = new ArrayList<>();
-    private int nextIndex = 1;
 
     public PostLogClient(ServerFacade server, String authToken, String username) {
         this.server = server;
@@ -66,18 +63,30 @@ public class PostLogClient {
     }
 
     private String createGame(String[] params) throws DataAccessException {
-        NewGameResult game = server.createGame(authToken, params[0]);
-        games.add(new GameInfo(nextIndex, null, null, params[0]));
-        nextIndex ++;
+        if (params.length != 1) {
+            throw new BadRequestException("Error, expected: create <gameName>");
+        }
+        server.createGame(authToken, params[0]);
+
         return String.format("\nNew game '%s' created \n", params[0]);
     }
 
     private String observeGame(String[] params) throws DataAccessException {
         int id = getId(params, 1, "Error, expected: observe <gameID>\n");
 
-        if (id <= 0 || id >= nextIndex) {
-            throw new BadRequestException("Error: use numbers from the list of games to observe a game\n");
+        GameList allGames = server.listGames(authToken);
+        List<GameInfo> games = allGames.games();
+        boolean validId = false;
+        for (GameInfo game : games){
+            if (game.gameID() == id) {
+                validId = true;
+                break;
+            }
         }
+        if (!validId){
+            throw new BadRequestException("Error: use numbers from the list of games\n");
+        }
+
         System.out.print("\nObserving game " + params[0] + "\n");
         new InGameClient("observer").run();
 
@@ -91,23 +100,28 @@ public class PostLogClient {
             throw new BadRequestException("Error: use WHITE or BLACK for the team color");
         }
 
-        if (id <= 0 || id >= nextIndex) {
-            throw new BadRequestException("Error: use numbers from the list of games to observe a game\n");
-        }
+        server.joinGame(authToken, id, params[1].toUpperCase());
 
-        GameInfo game = games.get(Integer.parseInt(params[0])-1);
-        if (params[1].equalsIgnoreCase("WHITE")){
-            server.joinGame(authToken, Integer.parseInt(params[0]), params[1].toUpperCase());
-            games.set(Integer.parseInt(params[0])-1, new GameInfo(game.gameID(), username, game.blackUsername(), game.gameName()));
-        } else if (params[1].equalsIgnoreCase("BLACK")){
-            server.joinGame(authToken, Integer.parseInt(params[0]), params[1].toUpperCase());
-            games.set(Integer.parseInt(params[0])-1, new GameInfo(game.gameID(), game.whiteUsername(), username, game.gameName()));
-        } else {
-            throw new BadRequestException("Error: invalid team color given");
-        }
         System.out.printf("\nSuccessfully joined game %d as %s \n", Integer.parseInt(params[0]), params[1].toLowerCase());
         new InGameClient(params[1].toUpperCase()).run();
         return "\nGame exited\n";
+    }
+
+    private String listGames() throws DataAccessException {
+        GameList allGames = server.listGames(authToken);
+        StringBuilder result = new StringBuilder(String.format(EscapeSequences.SET_BG_COLOR_MAGENTA+
+                "| %-5s | %-20s | %-20s | %-20s |" + EscapeSequences.RESET_BG_COLOR + "\n",
+                "Index", "White Team", "Black Team", "Name"));
+        for (int i = 0; i < allGames.games().size(); i++){
+            GameInfo game = allGames.games().get(i);
+            result.append(String.format("| %-5s | %-20s | %-20s | %-20s |\n", i + 1, game.whiteUsername(), game.blackUsername(), game.gameName()));
+        }
+        return result + "\n";
+    }
+
+    private String logout() throws DataAccessException {
+        server.logout(authToken);
+        return "logout";
     }
 
     private static int getId(String[] params, int x, String message) throws BadRequestException {
@@ -119,29 +133,13 @@ public class PostLogClient {
             throw new BadRequestException("Error: use numbers from the list of games\n");
         }
 
-        int id = 0;
+        int id;
         try {
             id = Integer.parseInt(s);
         } catch (NumberFormatException e) {
             throw new BadRequestException("Error: use numbers from the list of games\n");
         }
         return id;
-    }
-
-    private String listGames() throws DataAccessException {
-        StringBuilder result = new StringBuilder(String.format(EscapeSequences.SET_BG_COLOR_MAGENTA+
-                "| %-5s | %-20s | %-20s | %-20s |" + EscapeSequences.RESET_BG_COLOR + "\n",
-                "Index", "White Team", "Black Team", "Name"));
-        for (int i = 0; i < games.size(); i++){
-            GameInfo game = games.get(i);
-            result.append(String.format("| %-5s | %-20s | %-20s | %-20s |\n", i + 1, game.whiteUsername(), game.blackUsername(), game.gameName()));
-        }
-        return result.toString() + "\n";
-    }
-
-    private String logout() throws DataAccessException {
-        server.logout(authToken);
-        return "logout";
     }
 
     private String help() {
