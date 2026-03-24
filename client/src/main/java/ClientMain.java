@@ -1,6 +1,5 @@
-package client;
-
 import chess.*;
+import client.PreLogClient;
 
 public class ClientMain {
     public static void main(String[] args) {
