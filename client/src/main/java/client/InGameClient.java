@@ -28,11 +28,12 @@ public class InGameClient {
 
             try {
                 result = eval(line);
-                System.out.print(result);
+                System.out.print("\n" + result);
             } catch (Throwable e) {
                 var msg = e.toString();
                 System.out.print(msg);
             }
+            System.out.print(help());
         }
     }
 
