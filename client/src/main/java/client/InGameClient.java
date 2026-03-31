@@ -163,7 +163,11 @@ public class InGameClient {
     private String help() {
         return """
                 Possible Commands:
-                  leave - exit game
+                  redraw - reload the current chess board
+                  move <space 1> <space 2> - move a piece on space 1 to space 2
+                  resign - forfeit the game
+                  moves - highlight legal moves
+                  leave - exit the game
                   help - see possible commands
                 """;
     }
