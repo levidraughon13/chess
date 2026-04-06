@@ -1,18 +1,26 @@
 package client;
 
+import client.websocket.ServerMessageHandler;
+import client.websocket.WebSocketCommunicator;
+import exception.DataAccessException;
 import ui.EscapeSequences;
+import websocket.messages.ServerMessage;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.Scanner;
 
-public class InGameClient {
+public class InGameClient implements ServerMessageHandler {
+    private final ServerFacade server;
     private final String team;
+    private final WebSocketCommunicator ws;
 
 
-    public InGameClient(String color) {
+    public InGameClient(ServerFacade server, String color) throws DataAccessException {
         this.team = color; //remember that if the color == "observer", different commands should be shown below
+        this.server = server;
+        this.ws = new WebSocketCommunicator(server.serverUrl, this);
     }
 
     public void run() {
@@ -170,5 +178,10 @@ public class InGameClient {
                   leave - exit the game
                   help - see possible commands
                 """;
+    }
+
+    @Override
+    public void notify(ServerMessage message) {
+
     }
 }

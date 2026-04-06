@@ -22,11 +22,11 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
     @Override
     public void handleMessage(WsMessageContext ctx) {
         try {
-            UserGameCommand action = new Gson().fromJson(ctx.message(), UserGameCommand.class);
+            UserGameCommand command = new Gson().fromJson(ctx.message(), UserGameCommand.class);
 
-            switch (action.getCommandType()) {
-                case CONNECT -> connect(action.visitorName(), ctx.session);
-                case LEAVE -> exit(action.visitorName(), ctx.session);
+            switch (command.getCommandType()) {
+                case CONNECT -> connect(command.getAuthToken(), ctx.session);
+                case LEAVE -> exit(command.getAuthToken(), ctx.session);
             }
         } catch (IOException ex) {
             ex.printStackTrace();
@@ -40,7 +40,7 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
 
     private void connect(String visitorName, Session session) throws IOException {
         connections.add(session);
-        var message = String.format("%s is in the shop", visitorName);
+        var message = String.format("%s joined the game", visitorName);
         var notification = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION);
         connections.broadcast(session, notification);
     }
