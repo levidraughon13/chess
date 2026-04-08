@@ -51,12 +51,17 @@ public class InGameClient implements ServerMessageHandler {
             String[] tokens = input.toLowerCase().split(" ");
             String cmd = (tokens.length > 0) ? tokens[0] : "help";
             String[] params = Arrays.copyOfRange(tokens, 1, tokens.length);
+            if (!team.equalsIgnoreCase("observer")) {
+                if (cmd.equalsIgnoreCase("move")) {
+                    return "move()";
+                } else if (cmd.equalsIgnoreCase("resign")) {
+                    return "resign()";
+                }
+            }
             return switch (cmd) {
                 case "leave" -> "leave";
-                case "redraw" -> "leave";
-                case "highlight" -> "leave";
-                case "move" -> "leave";
-                case "resign" -> "leave";
+                case "redraw" -> "redraw()";
+                case "highlight" -> "highlight()";
                 default -> help();
             };
         } catch (Throwable ex) {
@@ -172,8 +177,13 @@ public class InGameClient implements ServerMessageHandler {
         }
     }
 
+    private void redraw(){}
+    private void highlight(){}
+    private void move(){}
+    private void resign(){}
+
     private String help() {
-        if (!Objects.equals(team, "observer")){
+        if (!team.equalsIgnoreCase("observer")){
             return """
                 Possible Commands:
                   redraw - reload the current chess board

@@ -37,4 +37,20 @@ public class WebSocketCommunicator {
             throw new DataAccessException(ex.getMessage());
         }
     }
+
+    public void observerJoin(){}
+
+    public void observerLeave(){}
+
+    public void playerJoin(){}
+
+    public void playerLeave(){}
+
+    public void makeMove(){}
+
+    public void resign(){}
+
+    public void check(){}
+
+    public void checkmate(){}
 }

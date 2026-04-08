@@ -8,6 +8,7 @@ import io.javalin.*;
 import io.javalin.http.Context;
 import request.*;
 import result.*;
+import server.websocket.WebSocketHandler;
 import service.*;
 
 public class Server {
@@ -26,6 +27,8 @@ public class Server {
         this.authService = new AuthService(auth);
         this.gameService = new GameService(game, auth);
 
+        WebSocketHandler  websocketHandler= new WebSocketHandler();
+
         javalin = Javalin.create(config -> config.staticFiles.add("web"));
         javalin.post("/user", this::addUser);
         javalin.post("/session", this::login);
@@ -34,6 +37,11 @@ public class Server {
         javalin.post("/game", this::createGame);
         javalin.put("/game", this::joinGame);
         javalin.delete("/db", this::clear);
+        javalin.ws("/ws", ws -> {
+           ws.onConnect(websocketHandler);
+           ws.onMessage(websocketHandler);
+           ws.onClose(websocketHandler);
+        });
 
     }
 
