@@ -53,6 +53,10 @@ public class InGameClient implements ServerMessageHandler {
             String[] params = Arrays.copyOfRange(tokens, 1, tokens.length);
             return switch (cmd) {
                 case "leave" -> "leave";
+                case "redraw" -> "leave";
+                case "highlight" -> "leave";
+                case "move" -> "leave";
+                case "resign" -> "leave";
                 default -> help();
             };
         } catch (Throwable ex) {
@@ -169,13 +173,22 @@ public class InGameClient implements ServerMessageHandler {
     }
 
     private String help() {
+        if (!Objects.equals(team, "observer")){
+            return """
+                Possible Commands:
+                  redraw - reload the current chess board
+                  move <space 1> <space 2> - move a piece on space 1 to space 2 (eg. move e7 e6)
+                  resign - forfeit the game
+                  highlight <space> - highlight legal moves for a given piece
+                  leave - leave the game
+                  help - see possible commands
+                """;
+        }
         return """
                 Possible Commands:
                   redraw - reload the current chess board
-                  move <space 1> <space 2> - move a piece on space 1 to space 2
-                  resign - forfeit the game
-                  moves - highlight legal moves
-                  leave - exit the game
+                  highlight <space> - highlight legal moves for a given piece
+                  leave - leave the game
                   help - see possible commands
                 """;
     }
