@@ -1,8 +1,10 @@
 package server.websocket;
 
+import chess.ChessMove;
 import com.google.gson.Gson;
 import io.javalin.websocket.*;
 import org.eclipse.jetty.websocket.api.Session;
+import websocket.commands.MakeMoveCommand;
 import websocket.commands.UserGameCommand;
 import websocket.messages.ServerMessage;
 
@@ -27,7 +29,10 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
             switch (command.getCommandType()) {
                 case CONNECT -> join(command.getAuthToken(), command.getGameID(), ctx.session);
                 case LEAVE -> exit(command.getAuthToken(), command.getGameID(), ctx.session);
-                case MAKE_MOVE -> makeMove();
+                case MAKE_MOVE -> {
+                    MakeMoveCommand moveCommand = new Gson().fromJson(ctx.message(), MakeMoveCommand.class);
+                    makeMove(moveCommand.getAuthToken(), moveCommand.getChessMove(), ctx.session);
+                }
                 case RESIGN -> resign();
             }
         } catch (IOException ex) {
@@ -55,7 +60,7 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
         connections.remove(id, session);
     }
 
-    private void makeMove(){}
+    private void makeMove(String visitorName, ChessMove move, Session session){}
 
     private void resign(){}
 }

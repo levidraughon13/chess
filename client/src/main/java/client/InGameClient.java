@@ -15,12 +15,16 @@ public class InGameClient implements ServerMessageHandler {
     private final ServerFacade server;
     private final String team;
     private final WebSocketCommunicator ws;
+    private final String authToken;
+    private final String username;
 
 
-    public InGameClient(ServerFacade server, String color) throws DataAccessException {
+    public InGameClient(ServerFacade server, String color, String authToken, String username) throws DataAccessException {
         this.team = color; //remember that if the color == "observer", different commands should be shown below
         this.server = server;
         this.ws = new WebSocketCommunicator(server.serverUrl, this);
+        this.authToken = authToken;
+        this.username = username;
     }
 
     public void run() {
@@ -30,7 +34,7 @@ public class InGameClient implements ServerMessageHandler {
 
         Scanner scanner = new Scanner(System.in);
         var result = "";
-        while (!result.equals("leave") && !result.equals("resign")) {
+        while (!result.equals("leave")) {
 
             String line = scanner.nextLine();
 
@@ -177,7 +181,9 @@ public class InGameClient implements ServerMessageHandler {
         }
     }
 
-    private void redraw(){}
+    private void redraw(){
+
+    }
     private void highlight(){}
     private void move(){}
     private void resign(){}
