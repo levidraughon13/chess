@@ -47,4 +47,10 @@ public class MemoryGameDAO implements GameDAO{
     public void clearGames(){
         games.clear();
     }
+
+    @Override
+    public void updateGame(Integer gameID, ChessGame game) throws SQLDataAccessException, BadRequestException {
+        GameData gameData = getGame(gameID);
+        games.replace(gameID, new GameData(gameData.gameID(), gameData.whiteUsername(), gameData.blackUsername(), gameData.gameName(), game));
+    }
 }

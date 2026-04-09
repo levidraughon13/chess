@@ -1,5 +1,6 @@
 package dataaccess;
 
+import chess.ChessGame;
 import model.GameData;
 import exception.*;
 
@@ -16,4 +17,6 @@ public interface GameDAO {
     GameData getGame(Integer gameID) throws SQLDataAccessException, BadRequestException;
 
     void clearGames() throws SQLDataAccessException;
+
+    void updateGame(Integer gameID, ChessGame game) throws SQLDataAccessException, BadRequestException;
 }
