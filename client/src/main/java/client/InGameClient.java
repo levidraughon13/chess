@@ -1,5 +1,9 @@
 package client;
 
+import chess.ChessBoard;
+import chess.ChessGame;
+import chess.ChessPiece;
+import chess.ChessPosition;
 import client.websocket.ServerMessageHandler;
 import client.websocket.WebSocketCommunicator;
 import com.google.gson.Gson;
@@ -60,6 +64,9 @@ public class InGameClient implements ServerMessageHandler {
             String[] tokens = input.toLowerCase().split(" ");
             String cmd = (tokens.length > 0) ? tokens[0] : "help";
             String[] params = Arrays.copyOfRange(tokens, 1, tokens.length);
+            if (gameOver && !cmd.equalsIgnoreCase("leave")){
+                return "\nGame is over, you can only enter 'leave' to exit the game\n";
+            }
             if (!team.equalsIgnoreCase("observer")) {
                 if (cmd.equalsIgnoreCase("move")) {
                     return "move()";
@@ -186,12 +193,81 @@ public class InGameClient implements ServerMessageHandler {
         }
     }
 
-    private void redraw(){
+    private String redraw(ChessGame game){
+        StringBuilder boardString = new StringBuilder(EscapeSequences.SET_TEXT_BOLD);
+        ChessBoard board = game.getBoard();
+        String team1;
+        String team2;
+        if (Objects.equals(team, "BLACK")){
+            team1 = EscapeSequences.SET_TEXT_COLOR_BLUE;
+            team2 = EscapeSequences.SET_TEXT_COLOR_GREEN;
+        } else {
+            team1 = EscapeSequences.SET_TEXT_COLOR_GREEN;
+            team2 = EscapeSequences.SET_TEXT_COLOR_BLUE;
+        }
 
+        List<String> letters = List.of(" A ", " B ", " C ", " D " , " E ", " F ", " G ", " H ");
+        List<String> numbers = List.of(" 1 ", " 2 ", " 3 ", " 4 ", " 5 ", " 6 ", " 7 ", " 8 ");
+        List<Integer> rows = List.of(8, 7, 6, 5, 4, 3, 2, 1);
+        List<Integer> cols = List.of(1, 2, 3, 4, 5, 6, 7, 8);
+
+
+        if (Objects.equals(team, "BLACK")) {
+            letters = letters.reversed();
+            numbers = numbers.reversed();
+            rows = rows.reversed();
+            cols = cols.reversed();
+        }
+
+        letterRow(boardString, letters);
+
+
+
+        // ABOVE DOES THE TOP LETTER ROW
+
+
+        for (int i = 0; i < 8; i++){
+            boardString.append(EscapeSequences.SET_BG_COLOR_LIGHT_GREY).append(numbers.get(7-i)).append(team2);
+            for (int j = 0; j < 8; j++){
+                setSquareColor(((j+i) %2 ), boardString);
+                ChessPiece piece = board.getPiece(new ChessPosition(rows.get(i), cols.get(j)));
+
+                if (piece == null) {
+                    boardString.append("   ");
+                } else{
+                    switch(piece.getTeamColor()){
+                        case WHITE -> boardString.append(EscapeSequences.SET_TEXT_COLOR_GREEN);
+                        case BLACK -> boardString.append(EscapeSequences.SET_TEXT_COLOR_BLUE);
+                    }
+
+                    switch(piece.getPieceType()){
+                        case ROOK -> boardString.append(" R ");
+                        case BISHOP -> boardString.append(" B ");
+                        case QUEEN -> boardString.append(" Q ");
+                        case KNIGHT -> boardString.append(" N ");
+                        case KING -> boardString.append(" K ");
+                        case PAWN -> boardString.append(" P ");
+                    }
+                }
+            }
+            boardString.append(EscapeSequences.SET_BG_COLOR_LIGHT_GREY + EscapeSequences.RESET_TEXT_COLOR)
+                    .append(numbers.get(7-1)).append(EscapeSequences.RESET_BG_COLOR).append(EscapeSequences.RESET_BG_COLOR).append("\n");
+        }
+
+
+        // BELOW DOES BOTTOM LETTER ROW
+
+        letterRow(boardString, letters);
+
+        boardString.append(EscapeSequences.RESET_BG_COLOR + "\n" + EscapeSequences.RESET_TEXT_BOLD_FAINT);
+
+        return boardString.toString();
     }
     private void highlight(){}
     private void move(){}
-    private void resign(){}
+    private void resign(){
+        gameOver = true;
+    }
 
     private String help() {
         if (!team.equalsIgnoreCase("observer")){
@@ -221,7 +297,8 @@ public class InGameClient implements ServerMessageHandler {
                 System.out.print(message.getMessage());
             }
             case LOAD_GAME -> {
-
+                ChessGame game = message.getGame();
+                System.out.print(redraw(game));
             }
         }
     }

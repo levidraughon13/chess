@@ -91,6 +91,6 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
 
     private void resign(String authToken, Session session) throws SQLDataAccessException {
         String visitorName = authDAO.getAuth(authToken).username();
-        var message = String.format("%s left the game", visitorName);
+        var message = String.format("%s has resigned, game is over.", visitorName);
     }
 }
