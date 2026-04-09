@@ -217,13 +217,10 @@ public class InGameClient implements ServerMessageHandler {
     @Override
     public void notify(ServerMessage message) {
         switch (message.getServerMessageType()){
-            case ERROR -> {
-
+            case ERROR, NOTIFICATION -> {
+                System.out.print(message.getMessage());
             }
             case LOAD_GAME -> {
-
-            }
-            case NOTIFICATION -> {
 
             }
         }

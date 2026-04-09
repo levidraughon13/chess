@@ -47,7 +47,7 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
                     MakeMoveCommand moveCommand = new Gson().fromJson(ctx.message(), MakeMoveCommand.class);
                     makeMove(moveCommand.getGameID(), moveCommand.getChessMove(), ctx.session);
                 }
-                case RESIGN -> resign();
+                case RESIGN -> resign(command.getAuthToken(), ctx.session);
             }
         } catch (IOException | SQLDataAccessException ex) {
             ex.printStackTrace();
@@ -89,5 +89,8 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
         gameDAO.updateGame(gameID, game);
     }
 
-    private void resign(){}
+    private void resign(String authToken, Session session) throws SQLDataAccessException {
+        String visitorName = authDAO.getAuth(authToken).username();
+        var message = String.format("%s left the game", visitorName);
+    }
 }

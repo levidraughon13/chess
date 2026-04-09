@@ -1,5 +1,6 @@
 package server.websocket;
 
+import chess.ChessGame;
 import org.eclipse.jetty.websocket.api.Session;
 import websocket.messages.ServerMessage;
 
@@ -28,4 +29,6 @@ public class ConnectionManager {
             }
         }
     }
+
+
 }
