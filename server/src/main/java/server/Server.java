@@ -27,7 +27,7 @@ public class Server {
         this.authService = new AuthService(auth);
         this.gameService = new GameService(game, auth);
 
-        WebSocketHandler  websocketHandler= new WebSocketHandler();
+        WebSocketHandler  websocketHandler= new WebSocketHandler(auth, game);
 
         javalin = Javalin.create(config -> config.staticFiles.add("web"));
         javalin.post("/user", this::addUser);

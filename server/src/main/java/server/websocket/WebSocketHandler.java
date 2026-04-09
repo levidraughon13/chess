@@ -2,6 +2,8 @@ package server.websocket;
 
 import chess.ChessMove;
 import com.google.gson.Gson;
+import dataaccess.AuthDAO;
+import dataaccess.GameDAO;
 import io.javalin.websocket.*;
 import org.eclipse.jetty.websocket.api.Session;
 import websocket.commands.MakeMoveCommand;
@@ -14,6 +16,13 @@ import java.io.IOException;
 public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsCloseHandler {
 
     private final ConnectionManager connections = new ConnectionManager();
+    private final AuthDAO authDAO;
+    private final GameDAO gameDAO;
+
+    public WebSocketHandler(AuthDAO authDAO, GameDAO gameDAO) {
+        this.authDAO = authDAO;
+        this.gameDAO = gameDAO;
+    }
 
     @Override
     public void handleConnect(WsConnectContext ctx) {
@@ -27,7 +36,7 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
             UserGameCommand command = new Gson().fromJson(ctx.message(), UserGameCommand.class);
 
             switch (command.getCommandType()) {
-                case CONNECT -> join(command.getAuthToken(), command.getGameID(), ctx.session);
+                case CONNECT -> connect(command.getAuthToken(), command.getGameID(), ctx.session);
                 case LEAVE -> exit(command.getAuthToken(), command.getGameID(), ctx.session);
                 case MAKE_MOVE -> {
                     MakeMoveCommand moveCommand = new Gson().fromJson(ctx.message(), MakeMoveCommand.class);
@@ -45,7 +54,7 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
         System.out.println("Websocket closed");
     }
 
-    private void join(String visitorName, Integer id, Session session) throws IOException {
+    private void connect(String visitorName, Integer id, Session session) throws IOException {
         connections.add(id, session);
         var message = String.format("%s joined the game", visitorName);
         var notification = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION);
