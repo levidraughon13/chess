@@ -2,8 +2,12 @@ package client;
 
 import client.websocket.ServerMessageHandler;
 import client.websocket.WebSocketCommunicator;
+import com.google.gson.Gson;
 import exception.DataAccessException;
 import ui.EscapeSequences;
+import websocket.messages.Error;
+import websocket.messages.LoadGameMessage;
+import websocket.messages.Notification;
 import websocket.messages.ServerMessage;
 
 import java.util.Arrays;
@@ -17,6 +21,7 @@ public class InGameClient implements ServerMessageHandler {
     private final WebSocketCommunicator ws;
     private final String authToken;
     private final String username;
+    private boolean gameOver = false;
 
 
     public InGameClient(ServerFacade server, String color, String authToken, String username) throws DataAccessException {
@@ -211,6 +216,16 @@ public class InGameClient implements ServerMessageHandler {
 
     @Override
     public void notify(ServerMessage message) {
+        switch (message.getServerMessageType()){
+            case ERROR -> {
 
+            }
+            case LOAD_GAME -> {
+
+            }
+            case NOTIFICATION -> {
+
+            }
+        }
     }
 }

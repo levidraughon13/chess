@@ -19,11 +19,11 @@ public class ConnectionManager {
     }
 
     public void broadcast(Integer id, Session excludeSession, ServerMessage notification) throws IOException {
-        String msg = notification.toString();
+        String json = notification.toString();
         for (Session c : connections.get(id)) {
             if (c.isOpen()) {
                 if (!c.equals(excludeSession)) {
-                    c.getRemote().sendString(msg);
+                    c.getRemote().sendString(json);
                 }
             }
         }
