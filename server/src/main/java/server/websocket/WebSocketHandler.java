@@ -25,8 +25,10 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
             UserGameCommand command = new Gson().fromJson(ctx.message(), UserGameCommand.class);
 
             switch (command.getCommandType()) {
-                case CONNECT -> connect(command.getAuthToken(), command.getGameID(), ctx.session);
+                case CONNECT -> join(command.getAuthToken(), command.getGameID(), ctx.session);
                 case LEAVE -> exit(command.getAuthToken(), command.getGameID(), ctx.session);
+                case MAKE_MOVE -> makeMove();
+                case RESIGN -> resign();
             }
         } catch (IOException ex) {
             ex.printStackTrace();
@@ -38,7 +40,7 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
         System.out.println("Websocket closed");
     }
 
-    private void connect(String visitorName, Integer id, Session session) throws IOException {
+    private void join(String visitorName, Integer id, Session session) throws IOException {
         connections.add(id, session);
         var message = String.format("%s joined the game", visitorName);
         var notification = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION);
@@ -53,4 +55,7 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
         connections.remove(id, session);
     }
 
+    private void makeMove(){}
+
+    private void resign(){}
 }
