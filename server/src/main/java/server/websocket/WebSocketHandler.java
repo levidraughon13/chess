@@ -10,6 +10,7 @@ import dataaccess.GameDAO;
 import exception.BadRequestException;
 import exception.SQLDataAccessException;
 import io.javalin.websocket.*;
+import model.AuthData;
 import model.GameData;
 import org.eclipse.jetty.websocket.api.Session;
 import websocket.commands.PlayerJoinCommand;
@@ -63,7 +64,7 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
                 }
                 case RESIGN -> resign(command.getAuthToken(), command.getGameID(), ctx.session);
             }
-        } catch (IOException | SQLDataAccessException | BadRequestException ex) {
+        } catch (IOException ex) {
             ex.printStackTrace();
         }
     }
@@ -73,15 +74,41 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
         System.out.println("Websocket closed");
     }
 
-    private void connect(String authToken, Integer id, String color, Session session) throws IOException, SQLDataAccessException, BadRequestException {
-        connections.add(id, session);
-        String visitorName = authDAO.getAuth(authToken).username();
-        var message = String.format("%s joined the game as %s\n\n", visitorName, color.toLowerCase());
-        var notification = new NotificationMessage(NotificationMessage.ServerMessageType.NOTIFICATION, message);
-        connections.broadcast(id, session, notification);
-        var loadGame = new LoadGameMessage(ServerMessage.ServerMessageType.LOAD_GAME, gameDAO.getGame(id).game(), "");
-        session.getRemote().sendString(new Gson().toJson(loadGame));
+    private void connect(String authToken, Integer id, String color, Session session) throws IOException {
+        try {
+            connections.add(id, session);
+            AuthData authData = authDAO.getAuth(authToken);
+            if (authData == null) {
+                throw new BadRequestException("Error: invalid authToken\n");
+            }
+            String visitorName = authData.username();
+            if (color == null) {
+                GameData data = null;
+                data = gameDAO.getGame(id);
+                String white = data.whiteUsername();
+                String black = data.blackUsername();
+                if (visitorName.equals(white)) {
+                    color = "white";
+                } else if (visitorName.equals(black)) {
+                    color = "black";
+                } else {
+                    color = "observer";
+                }
+            }
+            var message = String.format("%s joined the game as %s\n\n", visitorName, color.toLowerCase());
+            var notification = new NotificationMessage(NotificationMessage.ServerMessageType.NOTIFICATION, message);
+            connections.broadcast(id, session, notification);
+            var loadGame = new LoadGameMessage(ServerMessage.ServerMessageType.LOAD_GAME, gameDAO.getGame(id).game(), null);
+            session.getRemote().sendString(new Gson().toJson(loadGame));
+        }  catch (BadRequestException | SQLDataAccessException e) {
+            ErrorMessage error = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, "Error: database error\n\n");
+            String json = new Gson().toJson(error);
+            session.getRemote().sendString(json);
+        }
     }
+
+
+
 
 
     private void exit(String authToken, Integer id, String color, Session session) throws IOException {
@@ -120,7 +147,7 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
             String message = String.format("%s moved %s\n", visitorName, getMoveDescription(move, game));
             game.makeMove(move);
             gameDAO.updateGame(gameID, game);
-            connections.broadcast(gameID, session, new LoadGameMessage(ServerMessage.ServerMessageType.LOAD_GAME, game, message));
+            connections.broadcast(gameID, new LoadGameMessage(ServerMessage.ServerMessageType.LOAD_GAME, game, message));
 
             String opponentName = null;
             if (turn == ChessGame.TeamColor.WHITE) {
@@ -136,14 +163,14 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
 
             turn = game.getTeamTurn();
             String newMessage = null;
-            if (game.isInCheck(turn)){
+            if (game.isInCheckmate(turn)) {
+                newMessage = String.format("\n%s is now in checkmate! %s wins, game is over.\n", opponentName, visitorName);
+                connections.broadcast(gameID, session, new NotificationMessage(ServerMessage.ServerMessageType.NOTIFICATION, newMessage));
+            } else if (game.isInCheck(turn)){
                 newMessage = String.format("\n%s is now in check!\n", opponentName);
                 connections.broadcast(gameID, session, new NotificationMessage(ServerMessage.ServerMessageType.NOTIFICATION, newMessage));
             }
-            if (game.isInCheckmate(turn)) {
-                newMessage = String.format("\n%s is now in checkmate! %s wins\n, game is over.", opponentName, visitorName);
-                connections.broadcast(gameID, session, new NotificationMessage(ServerMessage.ServerMessageType.NOTIFICATION, newMessage));
-            }
+
 
         } catch (InvalidMoveException e) {
             ErrorMessage error = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, "Error: invalid move\n");
@@ -174,9 +201,18 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
         return moveString.append("\n\n").toString();
     }
 
-    private void resign(String authToken, Integer gameID, Session session) throws SQLDataAccessException, IOException {
-        String visitorName = authDAO.getAuth(authToken).username();
-        var message = String.format("%s has resigned, game is over.\n\n", visitorName);
-        connections.broadcast(gameID, session, new NotificationMessage(ServerMessage.ServerMessageType.NOTIFICATION, message));
+    private void resign(String authToken, Integer gameID, Session session) throws IOException {
+
+        try {
+            String visitorName = null;
+            visitorName = authDAO.getAuth(authToken).username();
+            var message = String.format("%s has resigned, game is over.\n\n", visitorName);
+            connections.broadcast(gameID, session, new NotificationMessage(ServerMessage.ServerMessageType.NOTIFICATION, message));
+        } catch (SQLDataAccessException e) {
+            ErrorMessage error = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, "Error: database error\n");
+            String json = new Gson().toJson(error);
+            session.getRemote().sendString(json);
+        }
+
     }
 }

@@ -91,7 +91,7 @@ public class SQLGameDAO implements GameDAO{
         } catch (Exception e) {
             throw new SQLDataAccessException(String.format("Error: Unable to read data: %s", e.getMessage()));
         }
-        throw new BadRequestException("Error: bad request");
+        throw new BadRequestException("Error: bad request, game id invalid");
     }
 
     @Override

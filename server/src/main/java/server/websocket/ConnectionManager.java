@@ -19,11 +19,22 @@ public class ConnectionManager {
         connections.get(id).remove(session);
     }
 
-    public void broadcast(Integer id, Session excludeSession, ServerMessage notification) throws IOException {
+    public void broadcast(Integer id, ServerMessage notification) throws IOException {
         String json = notification.toString();
         for (Session c : connections.get(id)) {
             if (c.isOpen()) {
                 c.getRemote().sendString(json);
+            }
+        }
+    }
+
+    public void broadcast(Integer id, Session excludeSession, ServerMessage notification) throws IOException {
+        String json = notification.toString();
+        for (Session c : connections.get(id)) {
+            if (c.isOpen()) {
+                if (!c.equals(excludeSession)){
+                    c.getRemote().sendString(json);
+                }
             }
         }
     }
