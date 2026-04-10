@@ -346,11 +346,6 @@ public class InGameClient implements ServerMessageHandler {
     }
 
     private String move(String[] params) throws BadRequestException, IOException {
-        if (team.equalsIgnoreCase("white") && !(game.getTeamTurn() == ChessGame.TeamColor.WHITE)){
-            return "\nIt is not your turn\n";
-        } else if (team.equalsIgnoreCase("black") && !(game.getTeamTurn() == ChessGame.TeamColor.BLACK)){
-            return "\nIt is not your turn\n";
-        }
         ChessMove move = getMove(params);
         ws.makeMove(authToken, gameID, move, team);
         return "";
@@ -371,7 +366,7 @@ public class InGameClient implements ServerMessageHandler {
         }
         if (!team.equalsIgnoreCase("observer")){
             return """
-                Possible Commands:
+                Possible Commands (Some are exclusive to players):
                   redraw - reload the current chess board
                   move <space 1> <space 2> - move a piece on space 1 to space 2 (eg. move e7 e6)
                                            - you may also include a promotion piece if promoting
