@@ -377,6 +377,9 @@ public class InGameClient implements ServerMessageHandler {
         switch (message.getServerMessageType()){
             case ERROR, NOTIFICATION -> {
                 System.out.print(message.getMessage());
+                if (message.getMessage().contains("has resigned")){
+                    gameOver = true;
+                }
             }
             case LOAD_GAME -> {
                 game = message.getGame();

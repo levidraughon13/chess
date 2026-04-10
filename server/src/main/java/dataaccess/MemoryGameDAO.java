@@ -53,4 +53,9 @@ public class MemoryGameDAO implements GameDAO{
         GameData gameData = getGame(gameID);
         games.replace(gameID, new GameData(gameData.gameID(), gameData.whiteUsername(), gameData.blackUsername(), gameData.gameName(), game));
     }
+
+    @Override
+    public void updateGameData(Integer id, GameData gameData) {
+        games.replace(id, gameData);
+    }
 }

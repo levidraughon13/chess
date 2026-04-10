@@ -19,4 +19,6 @@ public interface GameDAO {
     void clearGames() throws SQLDataAccessException;
 
     void updateGame(Integer gameID, ChessGame game) throws SQLDataAccessException, BadRequestException;
+
+    void updateGameData(Integer id, GameData gameData) throws SQLDataAccessException;
 }
