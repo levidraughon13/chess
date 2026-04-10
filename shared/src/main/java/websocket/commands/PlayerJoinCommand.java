@@ -1,9 +1,9 @@
 package websocket.commands;
 
-public class LeaveCommand extends UserGameCommand {
+public class PlayerJoinCommand extends UserGameCommand {
     private final String color;
 
-    public LeaveCommand(CommandType commandType, String authToken, Integer gameID, String color) {
+    public PlayerJoinCommand(CommandType commandType, String authToken, Integer gameID, String color) {
         super(commandType, authToken, gameID);
 
         this.color = color;

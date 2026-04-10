@@ -6,8 +6,9 @@ import com.google.gson.Gson;
 
 import exception.DataAccessException;
 import jakarta.websocket.*;
-import websocket.commands.LeaveCommand;
+import websocket.commands.PlayerLeaveCommand;
 import websocket.commands.MakeMoveCommand;
+import websocket.commands.PlayerJoinCommand;
 import websocket.commands.UserGameCommand;
 import websocket.messages.ErrorMessage;
 import websocket.messages.LoadGameMessage;
@@ -18,6 +19,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 
+@ClientEndpoint
 public class WebSocketCommunicator {
 
     Session session;
@@ -60,6 +62,7 @@ public class WebSocketCommunicator {
         }
     }
 
+
     public void observerJoin(String authToken, Integer gameID) throws IOException {
         var command = new UserGameCommand(UserGameCommand.CommandType.CONNECT, authToken, gameID);
         this.session.getBasicRemote().sendText(new Gson().toJson(command));
@@ -70,13 +73,13 @@ public class WebSocketCommunicator {
         this.session.getBasicRemote().sendText(new Gson().toJson(command));
     }
 
-    public void playerJoin(String authToken, Integer gameID) throws IOException {
-        var command = new UserGameCommand(UserGameCommand.CommandType.CONNECT, authToken, gameID);
+    public void playerJoin(String authToken, Integer gameID, String color) throws IOException {
+        var command = new PlayerJoinCommand(UserGameCommand.CommandType.CONNECT, authToken, gameID, color);
         this.session.getBasicRemote().sendText(new Gson().toJson(command));
     }
 
     public void playerLeave(String authToken, Integer gameID, String color) throws IOException {
-        var command = new LeaveCommand(UserGameCommand.CommandType.LEAVE, authToken, gameID, color);
+        var command = new PlayerLeaveCommand(UserGameCommand.CommandType.LEAVE, authToken, gameID, color);
         this.session.getBasicRemote().sendText(new Gson().toJson(command));
     }
 

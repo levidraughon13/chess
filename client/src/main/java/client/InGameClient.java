@@ -8,6 +8,7 @@ import exception.DataAccessException;
 import ui.EscapeSequences;
 import websocket.messages.ServerMessage;
 
+import java.io.IOException;
 import java.util.*;
 
 public class InGameClient implements ServerMessageHandler {
@@ -17,16 +18,18 @@ public class InGameClient implements ServerMessageHandler {
     private final WebSocketCommunicator ws;
     private final String authToken;
     private final String username;
+    private final Integer gameID;
     private boolean gameOver = false;
     private ChessGame game = new ChessGame();
 
 
-    public InGameClient(ServerFacade server, String color, String authToken, String username) throws DataAccessException {
+    public InGameClient(ServerFacade server, String color, String authToken, String username, Integer gameID) throws DataAccessException {
         this.team = color; //remember that if the color == "observer", different commands should be shown below
         this.server = server;
         this.ws = new WebSocketCommunicator(server.serverUrl, this);
         this.authToken = authToken;
         this.username = username;
+        this.gameID = gameID;
         if (Objects.equals(team, "BLACK")){
             this.teamColor = ChessGame.TeamColor.BLACK;
         } else {
@@ -34,9 +37,10 @@ public class InGameClient implements ServerMessageHandler {
         }
     }
 
-    public void run() {
+    public void run() throws IOException {
+        ws.playerJoin(authToken, gameID, team);
         System.out.println(" ");
-        System.out.print(printInitialBoard());
+        System.out.print(redraw(game));
         System.out.print(help());
 
         Scanner scanner = new Scanner(System.in);
@@ -52,8 +56,9 @@ public class InGameClient implements ServerMessageHandler {
                 var msg = e.toString();
                 System.out.print(msg);
             }
-            System.out.print(help());
         }
+
+        ws.playerLeave(authToken, gameID, team);
     }
 
 
@@ -67,9 +72,11 @@ public class InGameClient implements ServerMessageHandler {
             }
             if (!team.equalsIgnoreCase("observer")) {
                 if (cmd.equalsIgnoreCase("move")) {
-                    return "move()";
+                    move(params);
+                    return "";
                 } else if (cmd.equalsIgnoreCase("resign")) {
-                    return "resign()";
+                    resign();
+                    return "";
                 }
             }
             return switch (cmd) {
@@ -280,9 +287,12 @@ public class InGameClient implements ServerMessageHandler {
         int col2 = p2c - 'a' + 1;
         int row2 = p2r - '0';
 
-        ChessPiece promote = getPromote(params);
+        if (params.length == 3){
+            ChessPiece promote = getPromote(params);
 
-        return new ChessMove(new ChessPosition(row1, col1), new ChessPosition(row2, col2), promote.getPieceType());
+            return new ChessMove(new ChessPosition(row1, col1), new ChessPosition(row2, col2), promote.getPieceType());
+        }
+        return new ChessMove(new ChessPosition(row1, col1), new ChessPosition(row2, col2), null);
     }
 
     private ChessPiece getPromote(String[] params) throws BadRequestException {
@@ -334,21 +344,30 @@ public class InGameClient implements ServerMessageHandler {
         return redraw(game, positions);
     }
 
-    private String move(String[] params) throws BadRequestException {
+    private String move(String[] params) throws BadRequestException, IOException {
         if (team.equalsIgnoreCase("white") && !(game.getTeamTurn() == ChessGame.TeamColor.WHITE)){
             return "\nIt is not your turn\n";
         } else if (team.equalsIgnoreCase("black") && !(game.getTeamTurn() == ChessGame.TeamColor.BLACK)){
             return "\nIt is not your turn\n";
         }
         ChessMove move = getMove(params);
+        ws.makeMove(authToken, gameID, move);
         return null;
     }
 
-    private void resign(){
+    private void resign() throws IOException {
         gameOver = true;
+        ws.resign(authToken, gameID);
     }
 
     private String help() {
+        if (gameOver) {
+            return """
+                    Game is over. Possible Commands:
+                      leave - leave the game
+                      help - see possible commands
+                    """;
+        }
         if (!team.equalsIgnoreCase("observer")){
             return """
                 Possible Commands:
@@ -384,6 +403,7 @@ public class InGameClient implements ServerMessageHandler {
             case LOAD_GAME -> {
                 game = message.getGame();
                 System.out.print(redraw(game));
+                System.out.print(message.getMessage());
             }
         }
     }

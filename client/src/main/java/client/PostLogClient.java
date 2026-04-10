@@ -5,6 +5,7 @@ import exception.DataAccessException;
 import result.*;
 import ui.EscapeSequences;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
@@ -71,7 +72,7 @@ public class PostLogClient {
         return String.format("\nNew game '%s' created \n", params[0]);
     }
 
-    private String observeGame(String[] params) throws DataAccessException {
+    private String observeGame(String[] params) throws DataAccessException, IOException {
         int id = getId(params, 1, "Error, expected: observe <gameID>\n");
 
         GameList allGames = server.listGames(authToken);
@@ -88,12 +89,12 @@ public class PostLogClient {
         }
 
         System.out.print("\nObserving game " + params[0] + "\n");
-        new InGameClient(server, "observer", authToken, username).run();
+        new InGameClient(server, "observer", authToken, username, id).run();
 
         return "\nLeft game\n";
     }
 
-    private String joinGame(String[] params) throws DataAccessException {
+    private String joinGame(String[] params) throws DataAccessException, IOException {
         int id = getId(params, 2, "Error, expected: join <gameID> [WHITE|BLACK]\n");
 
         if (!params[1].equalsIgnoreCase("WHITE") && !params[1].equalsIgnoreCase("BLACK")) {
@@ -103,7 +104,7 @@ public class PostLogClient {
         server.joinGame(authToken, id, params[1].toUpperCase());
 
         System.out.printf("\nSuccessfully joined game %d as %s \n", Integer.parseInt(params[0]), params[1].toLowerCase());
-        new InGameClient(server, params[1].toUpperCase(), authToken, username).run();
+        new InGameClient(server, params[1].toUpperCase(), authToken, username, id).run();
         return "\nGame exited\n";
     }
 

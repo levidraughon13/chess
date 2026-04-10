@@ -12,7 +12,7 @@ public class ConnectionManager {
     public final ConcurrentHashMap<Integer, Set<Session>> connections = new ConcurrentHashMap<>();
 
     public void add(Integer id, Session session) {
-        connections.get(id).add(session);
+        connections.computeIfAbsent(id, k -> ConcurrentHashMap.newKeySet()).add(session);
     }
 
     public void remove(Integer id, Session session) {
@@ -23,9 +23,7 @@ public class ConnectionManager {
         String json = notification.toString();
         for (Session c : connections.get(id)) {
             if (c.isOpen()) {
-                if (!c.equals(excludeSession)) {
-                    c.getRemote().sendString(json);
-                }
+                c.getRemote().sendString(json);
             }
         }
     }
