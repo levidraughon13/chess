@@ -40,7 +40,6 @@ public class InGameClient implements ServerMessageHandler {
     public void run() throws IOException {
         ws.playerJoin(authToken, gameID, team);
         System.out.println(" ");
-        System.out.print(redraw(game));
         System.out.print(help());
 
         Scanner scanner = new Scanner(System.in);
@@ -72,8 +71,7 @@ public class InGameClient implements ServerMessageHandler {
             }
             if (!team.equalsIgnoreCase("observer")) {
                 if (cmd.equalsIgnoreCase("move")) {
-                    move(params);
-                    return "";
+                    return move(params);
                 } else if (cmd.equalsIgnoreCase("resign")) {
                     resign();
                     return "";
@@ -256,7 +254,7 @@ public class InGameClient implements ServerMessageHandler {
                 }
             }
             boardString.append(EscapeSequences.SET_BG_COLOR_LIGHT_GREY + EscapeSequences.RESET_TEXT_COLOR)
-                    .append(numbers.get(7-1)).append(EscapeSequences.RESET_BG_COLOR).append(EscapeSequences.RESET_BG_COLOR).append("\n");
+                    .append(numbers.get(7-i)).append(EscapeSequences.RESET_BG_COLOR).append(EscapeSequences.RESET_BG_COLOR).append("\n");
         }
 
 
@@ -336,6 +334,9 @@ public class InGameClient implements ServerMessageHandler {
         ChessPosition selected = getPosition(params);
 
         Collection<ChessMove> moves = game.validMoves(selected);
+        if (moves.isEmpty()){
+            return "No valid moves\n";
+        }
         List<ChessPosition> positions = new ArrayList<>(List.of());
         positions.add(moves.iterator().next().getStartPosition());
         for (ChessMove move : moves) {
@@ -352,7 +353,7 @@ public class InGameClient implements ServerMessageHandler {
         }
         ChessMove move = getMove(params);
         ws.makeMove(authToken, gameID, move);
-        return null;
+        return "";
     }
 
     private void resign() throws IOException {
@@ -396,7 +397,7 @@ public class InGameClient implements ServerMessageHandler {
         switch (message.getServerMessageType()){
             case ERROR, NOTIFICATION -> {
                 System.out.print(message.getMessage());
-                if (message.getMessage().contains("has resigned")){
+                if (message.getMessage().contains("game is over")){
                     gameOver = true;
                 }
             }
@@ -467,7 +468,7 @@ public class InGameClient implements ServerMessageHandler {
                 }
             }
             boardString.append(EscapeSequences.SET_BG_COLOR_LIGHT_GREY + EscapeSequences.RESET_TEXT_COLOR)
-                    .append(numbers.get(7-1)).append(EscapeSequences.RESET_BG_COLOR).append(EscapeSequences.RESET_BG_COLOR).append("\n");
+                    .append(numbers.get(7-i)).append(EscapeSequences.RESET_BG_COLOR).append(EscapeSequences.RESET_BG_COLOR).append("\n");
         }
 
 
@@ -490,7 +491,8 @@ public class InGameClient implements ServerMessageHandler {
 
         if (positions.contains(currentSquare)) {
             board.append(EscapeSequences.SET_BG_COLOR_YELLOW);
-        } else if (positions.contains(piecePosition)){
+        }
+        if (currentSquare.equals(piecePosition)){
             board.append(EscapeSequences.SET_BG_COLOR_RED);
         }
     }

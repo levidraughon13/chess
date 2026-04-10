@@ -63,7 +63,7 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
                 }
                 case RESIGN -> resign(command.getAuthToken(), command.getGameID(), ctx.session);
             }
-        } catch (IOException | SQLDataAccessException ex) {
+        } catch (IOException | SQLDataAccessException | BadRequestException ex) {
             ex.printStackTrace();
         }
     }
@@ -73,12 +73,14 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
         System.out.println("Websocket closed");
     }
 
-    private void connect(String authToken, Integer id, String color, Session session) throws IOException, SQLDataAccessException {
+    private void connect(String authToken, Integer id, String color, Session session) throws IOException, SQLDataAccessException, BadRequestException {
         connections.add(id, session);
         String visitorName = authDAO.getAuth(authToken).username();
-        var message = String.format("%s joined the game as %s", visitorName, color.toLowerCase());
+        var message = String.format("%s joined the game as %s\n\n", visitorName, color.toLowerCase());
         var notification = new NotificationMessage(NotificationMessage.ServerMessageType.NOTIFICATION, message);
         connections.broadcast(id, session, notification);
+        var loadGame = new LoadGameMessage(ServerMessage.ServerMessageType.LOAD_GAME, gameDAO.getGame(id).game(), "");
+        session.getRemote().sendString(new Gson().toJson(loadGame));
     }
 
 
@@ -86,7 +88,7 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
         String visitorName = null;
         try {
             visitorName = authDAO.getAuth(authToken).username();
-            var message = String.format("%s (%s) left the game", visitorName, color.toLowerCase());
+            var message = String.format("%s (%s) left the game\n\n", visitorName, color.toLowerCase());
             var notification = new NotificationMessage(NotificationMessage.ServerMessageType.NOTIFICATION, message);
 
             GameData gameData = gameDAO.getGame(id);
@@ -101,7 +103,7 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
             connections.broadcast(id, session, notification);
             connections.remove(id, session);
         } catch (SQLDataAccessException|BadRequestException e) {
-            ErrorMessage error = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, "Error: database error");
+            ErrorMessage error = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, "Error: database error\n\n");
             String json = new Gson().toJson(error);
             session.getRemote().sendString(json);
         }
@@ -115,35 +117,52 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
             ChessGame game = gameData.game();
             ChessGame.TeamColor turn = game.getTeamTurn();
             String visitorName = authDAO.getAuth(authToken).username();
+            String message = String.format("%s moved %s\n", visitorName, getMoveDescription(move, game));
             game.makeMove(move);
             gameDAO.updateGame(gameID, game);
-            String message = String.format("%s moved %s", visitorName, getMoveDescription(move, gameID));
             connections.broadcast(gameID, session, new LoadGameMessage(ServerMessage.ServerMessageType.LOAD_GAME, game, message));
-            //turn = game.getTeamTurn();
-            //if (game.isInCheck(turn)){
-            //    String newMessage = "";
-            //}
-            //if (game.isInCheckmate(turn)) {
-//
-            //}
+
+            String opponentName = null;
+            if (turn == ChessGame.TeamColor.WHITE) {
+                opponentName = gameData.whiteUsername();
+            } else if (turn == ChessGame.TeamColor.BLACK) {
+                opponentName = gameData.blackUsername();
+            }
+            if (opponentName == null){
+                opponentName = "<other team>";
+            }
+
+
+
+            turn = game.getTeamTurn();
+            String newMessage = null;
+            if (game.isInCheck(turn)){
+                newMessage = String.format("\n%s is now in check!\n", opponentName);
+                connections.broadcast(gameID, session, new NotificationMessage(ServerMessage.ServerMessageType.NOTIFICATION, newMessage));
+            }
+            if (game.isInCheckmate(turn)) {
+                newMessage = String.format("\n%s is now in checkmate! %s wins\n, game is over.", opponentName, visitorName);
+                connections.broadcast(gameID, session, new NotificationMessage(ServerMessage.ServerMessageType.NOTIFICATION, newMessage));
+            }
+
         } catch (InvalidMoveException e) {
-            ErrorMessage error = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, "Error: invalid move");
+            ErrorMessage error = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, "Error: invalid move\n");
             String json = new Gson().toJson(error);
             session.getRemote().sendString(json);
         } catch (BadRequestException | SQLDataAccessException e) {
-            ErrorMessage error = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, "Error: database error");
+            ErrorMessage error = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, "Error: database error\n");
             String json = new Gson().toJson(error);
             session.getRemote().sendString(json);
         }
     }
 
-    private String getMoveDescription(ChessMove move, Integer gameID) throws SQLDataAccessException, BadRequestException {
+    private String getMoveDescription(ChessMove move, ChessGame game) throws SQLDataAccessException, BadRequestException {
         List<String> letters = List.of("A", "B", "C", "D", "E", "F", "G", "H");
         int startRow = move.getStartPosition().getRow();
         int startCol = move.getStartPosition().getColumn();
         int endRow = move.getEndPosition().getRow();
         int endCol = move.getEndPosition().getColumn();
-        ChessPiece.PieceType type = gameDAO.getGame(gameID).game().getBoard().getPiece(move.getStartPosition()).getPieceType();
+        ChessPiece.PieceType type = game.getBoard().getPiece(move.getStartPosition()).getPieceType();
 
         StringBuilder moveString = new StringBuilder(String.format("%s %s%d to %s%d", type, letters.get(startCol - 1), startRow, letters.get(endCol - 1), endRow));
 
@@ -152,12 +171,12 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
             moveString.append(promote);
         }
 
-        return moveString.toString();
+        return moveString.append("\n\n").toString();
     }
 
     private void resign(String authToken, Integer gameID, Session session) throws SQLDataAccessException, IOException {
         String visitorName = authDAO.getAuth(authToken).username();
-        var message = String.format("%s has resigned, game is over.", visitorName);
+        var message = String.format("%s has resigned, game is over.\n\n", visitorName);
         connections.broadcast(gameID, session, new NotificationMessage(ServerMessage.ServerMessageType.NOTIFICATION, message));
     }
 }
