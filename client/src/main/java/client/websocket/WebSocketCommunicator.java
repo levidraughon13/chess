@@ -5,9 +5,9 @@ import com.google.gson.Gson;
 
 import exception.DataAccessException;
 import jakarta.websocket.*;
-import websocket.messages.Error;
+import websocket.messages.ErrorMessage;
 import websocket.messages.LoadGameMessage;
-import websocket.messages.Notification;
+import websocket.messages.NotificationMessage;
 import websocket.messages.ServerMessage;
 
 import java.io.IOException;
@@ -36,7 +36,7 @@ public class WebSocketCommunicator {
 
                     switch (notification.getServerMessageType()){
                         case ERROR -> {
-                            var realMessage = new Gson().fromJson(message, Error.class);
+                            var realMessage = new Gson().fromJson(message, ErrorMessage.class);
                             messageHandler.notify(realMessage);
                         }
                         case LOAD_GAME -> {
@@ -44,7 +44,7 @@ public class WebSocketCommunicator {
                             messageHandler.notify(realMessage);
                         }
                         case NOTIFICATION -> {
-                            var realMessage = new Gson().fromJson(message, Notification.class);
+                            var realMessage = new Gson().fromJson(message, NotificationMessage.class);
                             messageHandler.notify(realMessage);
                         }
                     }
@@ -56,19 +56,19 @@ public class WebSocketCommunicator {
         }
     }
 
-    public void observerJoin(){}
+    public void observerJoin(String authToken, Integer gameID){}
 
-    public void observerLeave(){}
+    public void observerLeave(String authToken, Integer gameID){}
 
-    public void playerJoin(){}
+    public void playerJoin(String authToken, Integer gameID){}
 
-    public void playerLeave(){}
+    public void playerLeave(String authToken, Integer gameID){}
 
-    public void makeMove(){}
+    public void makeMove(String authToken, Integer gameID){}
 
-    public void resign(){}
+    public void resign(String authToken, Integer gameID){}
 
-    public void check(){}
+    public void check(String authToken){}
 
-    public void checkmate(){}
+    public void checkmate(String authToken){}
 }

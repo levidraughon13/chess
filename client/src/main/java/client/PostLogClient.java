@@ -32,10 +32,10 @@ public class PostLogClient {
 
             try {
                 result = eval(line);
-                System.out.print(result + "\n"  + help());
+                System.out.print(result + "\n");
             } catch (Throwable e) {
                 var msg = e.toString();
-                System.out.print(msg  + help());
+                System.out.print(msg);
             }
         }
         return result;

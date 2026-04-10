@@ -1,31 +1,24 @@
 package client;
 
-import chess.ChessBoard;
-import chess.ChessGame;
-import chess.ChessPiece;
-import chess.ChessPosition;
+import chess.*;
 import client.websocket.ServerMessageHandler;
 import client.websocket.WebSocketCommunicator;
-import com.google.gson.Gson;
+import exception.BadRequestException;
 import exception.DataAccessException;
 import ui.EscapeSequences;
-import websocket.messages.Error;
-import websocket.messages.LoadGameMessage;
-import websocket.messages.Notification;
 import websocket.messages.ServerMessage;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
-import java.util.Scanner;
+import java.util.*;
 
 public class InGameClient implements ServerMessageHandler {
     private final ServerFacade server;
     private final String team;
+    private final ChessGame.TeamColor teamColor;
     private final WebSocketCommunicator ws;
     private final String authToken;
     private final String username;
     private boolean gameOver = false;
+    private ChessGame game = new ChessGame();
 
 
     public InGameClient(ServerFacade server, String color, String authToken, String username) throws DataAccessException {
@@ -34,6 +27,11 @@ public class InGameClient implements ServerMessageHandler {
         this.ws = new WebSocketCommunicator(server.serverUrl, this);
         this.authToken = authToken;
         this.username = username;
+        if (Objects.equals(team, "BLACK")){
+            this.teamColor = ChessGame.TeamColor.BLACK;
+        } else {
+            this.teamColor = ChessGame.TeamColor.WHITE;
+        }
     }
 
     public void run() {
@@ -76,8 +74,8 @@ public class InGameClient implements ServerMessageHandler {
             }
             return switch (cmd) {
                 case "leave" -> "leave";
-                case "redraw" -> "redraw()";
-                case "highlight" -> "highlight()";
+                case "redraw" -> redraw(game);
+                case "highlight" -> highlight(params);
                 default -> help();
             };
         } catch (Throwable ex) {
@@ -263,8 +261,89 @@ public class InGameClient implements ServerMessageHandler {
 
         return boardString.toString();
     }
-    private void highlight(){}
-    private void move(){}
+
+    private ChessMove getMove(String[] params) throws BadRequestException {
+        if (!(params.length == 2) && !(params.length == 3)) {
+            throw new BadRequestException("Error: format input as example 'move e4 e7 *<promotion piece>*'\n");
+        }
+        String p1 = params[0].toLowerCase();
+        String p2 = params[1].toLowerCase();
+
+        char p1c = p1.charAt(0);
+        char p1r = p1.charAt(1);
+        char p2c = p2.charAt(0);
+        char p2r = p2.charAt(1);
+
+        int col1 = p1c - 'a' + 1;
+        int row1 = p1r - '0';
+
+        int col2 = p2c - 'a' + 1;
+        int row2 = p2r - '0';
+
+        ChessPiece promote = getPromote(params);
+
+        return new ChessMove(new ChessPosition(row1, col1), new ChessPosition(row2, col2), promote.getPieceType());
+    }
+
+    private ChessPiece getPromote(String[] params) throws BadRequestException {
+        ChessPiece promote = null;
+        if (params.length == 3) {
+            switch (params[2].toLowerCase()) {
+                case ("pawn") -> promote = new ChessPiece(teamColor, ChessPiece.PieceType.PAWN);
+                case ("rook") -> promote = new ChessPiece(teamColor, ChessPiece.PieceType.ROOK);
+                case ("knight") -> promote = new ChessPiece(teamColor, ChessPiece.PieceType.KNIGHT);
+                case ("bishop") -> promote = new ChessPiece(teamColor, ChessPiece.PieceType.BISHOP);
+                case ("queen") -> promote = new ChessPiece(teamColor, ChessPiece.PieceType.QUEEN);
+                case ("king") -> promote = new ChessPiece(teamColor, ChessPiece.PieceType.KING);
+                default -> {
+                    throw new BadRequestException("\nError: invalid promotion piece given\n");
+                }
+            }
+        }
+        return promote;
+    }
+
+    private ChessPosition getPosition(String[] params) throws BadRequestException {
+        if (params.length != 1) {
+            throw new BadRequestException("Error: format input as example 'highlight e7'\n");
+        }
+        String p1 = params[0].toLowerCase();
+
+
+        char p1c = p1.charAt(0);
+        char p1r = p1.charAt(1);
+
+        int col1 = p1c - 'a' + 1;
+        int row1 = p1r - '0';
+
+
+        ChessPiece promote = getPromote(params);
+
+        return new ChessPosition(row1, col1);
+    }
+
+    private String highlight(String[] params) throws BadRequestException {
+        ChessPosition selected = getPosition(params);
+
+        Collection<ChessMove> moves = game.validMoves(selected);
+        List<ChessPosition> positions = new ArrayList<>(List.of());
+        positions.add(moves.iterator().next().getStartPosition());
+        for (ChessMove move : moves) {
+            positions.add(move.getEndPosition());
+        }
+        return redraw(game, positions);
+    }
+
+    private String move(String[] params) throws BadRequestException {
+        if (team.equalsIgnoreCase("white") && !(game.getTeamTurn() == ChessGame.TeamColor.WHITE)){
+            return "\nIt is not your turn\n";
+        } else if (team.equalsIgnoreCase("black") && !(game.getTeamTurn() == ChessGame.TeamColor.BLACK)){
+            return "\nIt is not your turn\n";
+        }
+        ChessMove move = getMove(params);
+        return null;
+    }
+
     private void resign(){
         gameOver = true;
     }
@@ -275,8 +354,11 @@ public class InGameClient implements ServerMessageHandler {
                 Possible Commands:
                   redraw - reload the current chess board
                   move <space 1> <space 2> - move a piece on space 1 to space 2 (eg. move e7 e6)
+                                           - you may also include a promotion piece if promoting
+                                             a pawn, but doing so incorrectly will cause the game
+                                             to prompt you for a different move
                   resign - forfeit the game
-                  highlight <space> - highlight legal moves for a given piece
+                  highlight <space> - highlight legal moves for a given piece (eg. highlight a6)
                   leave - leave the game
                   help - see possible commands
                 """;
@@ -284,7 +366,7 @@ public class InGameClient implements ServerMessageHandler {
         return """
                 Possible Commands:
                   redraw - reload the current chess board
-                  highlight <space> - highlight legal moves for a given piece
+                  highlight <space> - highlight legal moves for a given piece (eg. highlight a6)
                   leave - leave the game
                   help - see possible commands
                 """;
@@ -297,9 +379,96 @@ public class InGameClient implements ServerMessageHandler {
                 System.out.print(message.getMessage());
             }
             case LOAD_GAME -> {
-                ChessGame game = message.getGame();
+                game = message.getGame();
                 System.out.print(redraw(game));
             }
+        }
+    }
+
+    private String redraw(ChessGame game, List<ChessPosition> positions){
+        StringBuilder boardString = new StringBuilder(EscapeSequences.SET_TEXT_BOLD);
+        ChessBoard board = game.getBoard();
+        String team1;
+        String team2;
+        if (Objects.equals(team, "BLACK")){
+            team1 = EscapeSequences.SET_TEXT_COLOR_BLUE;
+            team2 = EscapeSequences.SET_TEXT_COLOR_GREEN;
+        } else {
+            team1 = EscapeSequences.SET_TEXT_COLOR_GREEN;
+            team2 = EscapeSequences.SET_TEXT_COLOR_BLUE;
+        }
+
+        List<String> letters = List.of(" A ", " B ", " C ", " D " , " E ", " F ", " G ", " H ");
+        List<String> numbers = List.of(" 1 ", " 2 ", " 3 ", " 4 ", " 5 ", " 6 ", " 7 ", " 8 ");
+        List<Integer> rows = List.of(8, 7, 6, 5, 4, 3, 2, 1);
+        List<Integer> cols = List.of(1, 2, 3, 4, 5, 6, 7, 8);
+
+
+        if (Objects.equals(team, "BLACK")) {
+            letters = letters.reversed();
+            numbers = numbers.reversed();
+            rows = rows.reversed();
+            cols = cols.reversed();
+        }
+
+        letterRow(boardString, letters);
+
+
+
+        // ABOVE DOES THE TOP LETTER ROW
+
+
+        for (int i = 0; i < 8; i++){
+            boardString.append(EscapeSequences.SET_BG_COLOR_LIGHT_GREY).append(numbers.get(7-i)).append(team2);
+            for (int j = 0; j < 8; j++){
+                ChessPosition currentSquare = new ChessPosition(rows.get(i), cols.get(j));
+                setSquareColor(((j+i) %2 ), boardString, positions.getFirst(), currentSquare, positions);
+                ChessPiece piece = board.getPiece(currentSquare);
+
+                if (piece == null) {
+                    boardString.append("   ");
+                } else{
+                    switch(piece.getTeamColor()){
+                        case WHITE -> boardString.append(EscapeSequences.SET_TEXT_COLOR_GREEN);
+                        case BLACK -> boardString.append(EscapeSequences.SET_TEXT_COLOR_BLUE);
+                    }
+
+                    switch(piece.getPieceType()){
+                        case ROOK -> boardString.append(" R ");
+                        case BISHOP -> boardString.append(" B ");
+                        case QUEEN -> boardString.append(" Q ");
+                        case KNIGHT -> boardString.append(" N ");
+                        case KING -> boardString.append(" K ");
+                        case PAWN -> boardString.append(" P ");
+                    }
+                }
+            }
+            boardString.append(EscapeSequences.SET_BG_COLOR_LIGHT_GREY + EscapeSequences.RESET_TEXT_COLOR)
+                    .append(numbers.get(7-1)).append(EscapeSequences.RESET_BG_COLOR).append(EscapeSequences.RESET_BG_COLOR).append("\n");
+        }
+
+
+        // BELOW DOES BOTTOM LETTER ROW
+
+        letterRow(boardString, letters);
+
+        boardString.append(EscapeSequences.RESET_BG_COLOR + "\n" + EscapeSequences.RESET_TEXT_BOLD_FAINT);
+
+        return boardString.toString();
+    }
+
+    private void setSquareColor(int i, StringBuilder board, ChessPosition piecePosition, ChessPosition currentSquare, List<ChessPosition> positions){
+        if ((i % 2) == 0){
+            board.append(EscapeSequences.SET_BG_COLOR_WHITE);
+        }
+        else {
+            board.append(EscapeSequences.SET_BG_COLOR_BLACK);
+        }
+
+        if (positions.contains(currentSquare)) {
+            board.append(EscapeSequences.SET_BG_COLOR_YELLOW);
+        } else if (positions.contains(piecePosition)){
+            board.append(EscapeSequences.SET_BG_COLOR_RED);
         }
     }
 }
