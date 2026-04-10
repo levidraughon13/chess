@@ -13,17 +13,18 @@ import io.javalin.websocket.*;
 import model.AuthData;
 import model.GameData;
 import org.eclipse.jetty.websocket.api.Session;
-import websocket.commands.PlayerJoinCommand;
-import websocket.commands.PlayerLeaveCommand;
-import websocket.commands.MakeMoveCommand;
-import websocket.commands.UserGameCommand;
+
+import websocket.commands.*;
 import websocket.messages.ErrorMessage;
 import websocket.messages.LoadGameMessage;
 import websocket.messages.NotificationMessage;
 import websocket.messages.ServerMessage;
 
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+
 
 
 public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsCloseHandler {
@@ -31,6 +32,8 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
     private final ConnectionManager connections = new ConnectionManager();
     private final AuthDAO authDAO;
     private final GameDAO gameDAO;
+    private Set<Integer> finishedGames = new HashSet<>();
+
 
     public WebSocketHandler(AuthDAO authDAO, GameDAO gameDAO) {
         this.authDAO = authDAO;
@@ -62,7 +65,10 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
                     MakeMoveCommand moveCommand = new Gson().fromJson(ctx.message(), MakeMoveCommand.class);
                     makeMove(moveCommand.getAuthToken(), moveCommand.getGameID(), moveCommand.getChessMove(), moveCommand.getColor(), ctx.session);
                 }
-                case RESIGN -> resign(command.getAuthToken(), command.getGameID(), ctx.session);
+                case RESIGN -> {
+                    ResignCommand resignCommand = new Gson().fromJson(ctx.message(), ResignCommand.class);
+                    resign(resignCommand.getAuthToken(), resignCommand.getGameID(), resignCommand.getColor(), ctx.session);
+                }
             }
         } catch (IOException ex) {
             ex.printStackTrace();
@@ -71,6 +77,7 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
 
     @Override
     public void handleClose(WsCloseContext ctx) {
+        finishedGames.clear();
         System.out.println("Websocket closed");
     }
 
@@ -155,7 +162,6 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
     }
 
     private void makeMove(String authToken, Integer gameID, ChessMove move, String color, Session session) throws IOException {
-
         try {
             GameData gameData = gameDAO.getGame(gameID);
             ChessGame game = gameData.game();
@@ -184,7 +190,9 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
             if (color.equalsIgnoreCase("observer")){
                 throw new BadRequestException("Error: only players in the game can make moves.\n");
             }
-
+            if (finishedGames.contains(gameID)){
+                throw new BadRequestException("Error: game is already over\n");
+            }
             if (color.equalsIgnoreCase("white") && !(game.getTeamTurn() == ChessGame.TeamColor.WHITE)){
                 throw new InvalidMoveException("Error: invalid move, it is not your turn.\n");
             } else if (color.equalsIgnoreCase("black") && !(game.getTeamTurn() == ChessGame.TeamColor.BLACK)){
@@ -251,15 +259,36 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
         return moveString.append("\n\n").toString();
     }
 
-    private void resign(String authToken, Integer gameID, Session session) throws IOException {
-
+    private void resign(String authToken, Integer gameID, String color, Session session) throws IOException {
         try {
             String visitorName = null;
             visitorName = authDAO.getAuth(authToken).username();
+
+            if (color == null) {
+                GameData data = null;
+                data = gameDAO.getGame(gameID);
+                String white = data.whiteUsername();
+                String black = data.blackUsername();
+                if (visitorName.equals(white)) {
+                    color = "white";
+                } else if (visitorName.equals(black)) {
+                    color = "black";
+                } else {
+                    color = "observer";
+                }
+            }
+            if (color.equalsIgnoreCase("observer")){
+                throw new BadRequestException("Error: only players in the game can make resign.\n");
+            }
+            if (finishedGames.contains(gameID)){
+                throw new BadRequestException("Error; game is already over\n");
+            }
+            finishedGames.add(gameID);
+
             var message = String.format("%s has resigned, game is over.\n\n", visitorName);
             connections.broadcast(gameID, new NotificationMessage(ServerMessage.ServerMessageType.NOTIFICATION, message));
-        } catch (SQLDataAccessException e) {
-            ErrorMessage error = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, "Error: database error\n");
+        } catch (SQLDataAccessException | BadRequestException e) {
+            ErrorMessage error = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, e.getMessage());
             String json = new Gson().toJson(error);
             session.getRemote().sendString(json);
         }

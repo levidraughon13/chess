@@ -6,10 +6,7 @@ import com.google.gson.Gson;
 
 import exception.DataAccessException;
 import jakarta.websocket.*;
-import websocket.commands.PlayerLeaveCommand;
-import websocket.commands.MakeMoveCommand;
-import websocket.commands.PlayerJoinCommand;
-import websocket.commands.UserGameCommand;
+import websocket.commands.*;
 import websocket.messages.ErrorMessage;
 import websocket.messages.LoadGameMessage;
 import websocket.messages.NotificationMessage;
@@ -88,8 +85,8 @@ public class WebSocketCommunicator {
         this.session.getBasicRemote().sendText(new Gson().toJson(command));
     }
 
-    public void resign(String authToken, Integer gameID) throws IOException {
-        var command = new UserGameCommand(UserGameCommand.CommandType.RESIGN, authToken, gameID);
+    public void resign(String authToken, Integer gameID, String color) throws IOException {
+        var command = new ResignCommand(UserGameCommand.CommandType.RESIGN, authToken, gameID, color);
         this.session.getBasicRemote().sendText(new Gson().toJson(command));
     }
 

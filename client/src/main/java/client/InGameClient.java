@@ -346,14 +346,18 @@ public class InGameClient implements ServerMessageHandler {
     }
 
     private String move(String[] params) throws BadRequestException, IOException {
+        String color = team;
+        if (gameOver){
+            color = "over";
+        }
         ChessMove move = getMove(params);
-        ws.makeMove(authToken, gameID, move, team);
+        ws.makeMove(authToken, gameID, move, color);
         return "";
     }
 
     private void resign() throws IOException {
         gameOver = true;
-        ws.resign(authToken, gameID);
+        ws.resign(authToken, gameID, team);
     }
 
     private String help() {

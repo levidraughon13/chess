@@ -146,6 +146,7 @@ public class Server {
             userService.clear();
             authService.clear();
             gameService.clear();
+
             ctx.status(200);
             ctx.result();
         } catch (SQLDataAccessException e) {
