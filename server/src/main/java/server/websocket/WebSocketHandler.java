@@ -90,19 +90,7 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
                 throw new BadRequestException("Error: invalid authToken\n");
             }
             String visitorName = authData.username();
-            if (color == null) {
-                GameData data;
-                data = gameDAO.getGame(id);
-                String white = data.whiteUsername();
-                String black = data.blackUsername();
-                if (visitorName.equals(white)) {
-                    color = "white";
-                } else if (visitorName.equals(black)) {
-                    color = "black";
-                } else {
-                    color = "observer";
-                }
-            }
+            color = getColor(id, color, visitorName);
             var message = String.format("%s joined the game as %s\n\n", visitorName, color.toLowerCase());
             var notification = new NotificationMessage(NotificationMessage.ServerMessageType.NOTIFICATION, message);
             connections.broadcast(id, session, notification);
@@ -115,8 +103,23 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
         }
     }
 
-
-
+    @NotNull
+    private String getColor(Integer id, String color, String visitorName) throws SQLDataAccessException, BadRequestException {
+        if (color == null) {
+            GameData data;
+            data = gameDAO.getGame(id);
+            String white = data.whiteUsername();
+            String black = data.blackUsername();
+            if (visitorName.equals(white)) {
+                color = "white";
+            } else if (visitorName.equals(black)) {
+                color = "black";
+            } else {
+                color = "observer";
+            }
+        }
+        return color;
+    }
 
 
     private void exit(String authToken, Integer id, String color, Session session) throws IOException {
@@ -124,19 +127,7 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
         try {
             visitorName = authDAO.getAuth(authToken).username();
 
-            if (color == null) {
-                GameData data;
-                data = gameDAO.getGame(id);
-                String white = data.whiteUsername();
-                String black = data.blackUsername();
-                if (visitorName.equals(white)) {
-                    color = "white";
-                } else if (visitorName.equals(black)) {
-                    color = "black";
-                } else {
-                    color = "observer";
-                }
-            }
+            color = getColor(id, color, visitorName);
 
 
             var message = String.format("%s (%s) left the game\n\n", visitorName, color.toLowerCase());
@@ -174,19 +165,7 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
 
             String visitorName = authData.username();
 
-            if (color == null) {
-                GameData data;
-                data = gameDAO.getGame(gameID);
-                String white = data.whiteUsername();
-                String black = data.blackUsername();
-                if (visitorName.equals(white)) {
-                    color = "white";
-                } else if (visitorName.equals(black)) {
-                    color = "black";
-                } else {
-                    color = "observer";
-                }
-            }
+            color = getColor(gameID, color, visitorName);
             if (color.equalsIgnoreCase("observer")){
                 throw new BadRequestException("Error: only players in the game can make moves.\n");
             }
@@ -235,7 +214,7 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
             String json = new Gson().toJson(error);
             session.getRemote().sendString(json);
         } catch (BadRequestException | SQLDataAccessException e) {
-            ErrorMessage error = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, "Error: database error\n");
+            ErrorMessage error = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, e.getMessage());
             String json = new Gson().toJson(error);
             session.getRemote().sendString(json);
         }
@@ -266,19 +245,7 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
             String visitorName;
             visitorName = authDAO.getAuth(authToken).username();
 
-            if (color == null) {
-                GameData data;
-                data = gameDAO.getGame(gameID);
-                String white = data.whiteUsername();
-                String black = data.blackUsername();
-                if (visitorName.equals(white)) {
-                    color = "white";
-                } else if (visitorName.equals(black)) {
-                    color = "black";
-                } else {
-                    color = "observer";
-                }
-            }
+            color = getColor(gameID, color, visitorName);
             if (color.equalsIgnoreCase("observer")){
                 throw new BadRequestException("Error: only players in the game can make resign.\n");
             }
