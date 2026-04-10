@@ -75,86 +75,13 @@ public class InGameClient implements ServerMessageHandler {
             }
             return switch (cmd) {
                 case "leave" -> "leave";
-                case "redraw" -> redraw(game);
+                case "redraw" -> redraw(game, List.of());
                 case "highlight" -> highlight(params);
                 default -> help();
             };
         } catch (Throwable ex) {
             return ex.getMessage();
         }
-    }
-
-
-
-    private String redraw(ChessGame game){
-        StringBuilder boardString = new StringBuilder(EscapeSequences.SET_TEXT_BOLD);
-        ChessBoard board = game.getBoard();
-
-        String team2;
-        if (Objects.equals(team, "BLACK")){
-
-            team2 = EscapeSequences.SET_TEXT_COLOR_GREEN;
-        } else {
-
-            team2 = EscapeSequences.SET_TEXT_COLOR_BLUE;
-        }
-
-        List<String> letters = List.of(" A ", " B ", " C ", " D " , " E ", " F ", " G ", " H ");
-        List<String> numbers = List.of(" 1 ", " 2 ", " 3 ", " 4 ", " 5 ", " 6 ", " 7 ", " 8 ");
-        List<Integer> rows = List.of(8, 7, 6, 5, 4, 3, 2, 1);
-        List<Integer> cols = List.of(1, 2, 3, 4, 5, 6, 7, 8);
-
-
-        if (Objects.equals(team, "BLACK")) {
-            letters = letters.reversed();
-            numbers = numbers.reversed();
-            rows = rows.reversed();
-            cols = cols.reversed();
-        }
-
-        letterRow(boardString, letters);
-
-
-
-        // ABOVE DOES THE TOP LETTER ROW
-
-
-        for (int i = 0; i < 8; i++){
-            boardString.append(EscapeSequences.SET_BG_COLOR_LIGHT_GREY).append(numbers.get(7-i)).append(team2);
-            for (int j = 0; j < 8; j++){
-                setSquareColor(((j+i) %2 ), boardString);
-                ChessPiece piece = board.getPiece(new ChessPosition(rows.get(i), cols.get(j)));
-
-                if (piece == null) {
-                    boardString.append("   ");
-                } else{
-                    switch(piece.getTeamColor()){
-                        case WHITE -> boardString.append(EscapeSequences.SET_TEXT_COLOR_GREEN);
-                        case BLACK -> boardString.append(EscapeSequences.SET_TEXT_COLOR_BLUE);
-                    }
-
-                    switch(piece.getPieceType()){
-                        case ROOK -> boardString.append(" R ");
-                        case BISHOP -> boardString.append(" B ");
-                        case QUEEN -> boardString.append(" Q ");
-                        case KNIGHT -> boardString.append(" N ");
-                        case KING -> boardString.append(" K ");
-                        case PAWN -> boardString.append(" P ");
-                    }
-                }
-            }
-            boardString.append(EscapeSequences.SET_BG_COLOR_LIGHT_GREY + EscapeSequences.RESET_TEXT_COLOR)
-                    .append(numbers.get(7-i)).append(EscapeSequences.RESET_BG_COLOR).append(EscapeSequences.RESET_BG_COLOR).append("\n");
-        }
-
-
-        // BELOW DOES BOTTOM LETTER ROW
-
-        letterRow(boardString, letters);
-
-        boardString.append(EscapeSequences.RESET_BG_COLOR + "\n" + EscapeSequences.RESET_TEXT_BOLD_FAINT);
-
-        return boardString.toString();
     }
 
     private String highlight(String[] params) throws BadRequestException {
@@ -229,7 +156,7 @@ public class InGameClient implements ServerMessageHandler {
             }
             case LOAD_GAME -> {
                 game = message.getGame();
-                System.out.print(redraw(game));
+                System.out.print(redraw(game, List.of()));
             }
         }
     }
@@ -271,7 +198,12 @@ public class InGameClient implements ServerMessageHandler {
             boardString.append(EscapeSequences.SET_BG_COLOR_LIGHT_GREY).append(numbers.get(7-i)).append(team2);
             for (int j = 0; j < 8; j++){
                 ChessPosition currentSquare = new ChessPosition(rows.get(i), cols.get(j));
-                setSquareColor(((j+i) %2 ), boardString, positions.getFirst(), currentSquare, positions);
+                if (!positions.isEmpty()){
+                    setSquareColor(((j+i) %2 ), boardString, positions.getFirst(), currentSquare, positions);
+                } else {
+                    setSquareColor(((j+i) %2 ), boardString);
+                }
+
                 ChessPiece piece = board.getPiece(currentSquare);
 
                 if (piece == null) {
@@ -324,12 +256,7 @@ public class InGameClient implements ServerMessageHandler {
     }
 
     private void setSquareColor(int i, StringBuilder board, ChessPosition piecePosition, ChessPosition currentSquare, List<ChessPosition> positions){
-        if ((i % 2) == 0){
-            board.append(EscapeSequences.SET_BG_COLOR_WHITE);
-        }
-        else {
-            board.append(EscapeSequences.SET_BG_COLOR_BLACK);
-        }
+        setSquareColor(i, board);
 
         if (positions.contains(currentSquare)) {
             board.append(EscapeSequences.SET_BG_COLOR_YELLOW);

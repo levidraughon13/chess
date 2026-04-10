@@ -249,7 +249,9 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
         int endCol = move.getEndPosition().getColumn();
         ChessPiece.PieceType type = game.getBoard().getPiece(move.getStartPosition()).getPieceType();
 
-        StringBuilder moveString = new StringBuilder(String.format("%s %s%d to %s%d", type, letters.get(startCol - 1), startRow, letters.get(endCol - 1), endRow));
+        StringBuilder moveString = new StringBuilder(String.format("%s %s%d to %s%d", type,
+                letters.get(startCol - 1), startRow,
+                letters.get(endCol - 1), endRow));
 
         if (move.getPromotionPiece() != null){
             String promote = String.format(", promoted %s to %s", type, move.getPromotionPiece());
