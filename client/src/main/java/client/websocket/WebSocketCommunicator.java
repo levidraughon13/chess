@@ -83,8 +83,8 @@ public class WebSocketCommunicator {
         this.session.getBasicRemote().sendText(new Gson().toJson(command));
     }
 
-    public void makeMove(String authToken, Integer gameID, ChessMove move) throws IOException {
-        var command = new MakeMoveCommand(UserGameCommand.CommandType.MAKE_MOVE, authToken, gameID, move);
+    public void makeMove(String authToken, Integer gameID, ChessMove move, String color) throws IOException {
+        var command = new MakeMoveCommand(UserGameCommand.CommandType.MAKE_MOVE, authToken, gameID, move, color);
         this.session.getBasicRemote().sendText(new Gson().toJson(command));
     }
 

@@ -60,7 +60,7 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
                 }
                 case MAKE_MOVE -> {
                     MakeMoveCommand moveCommand = new Gson().fromJson(ctx.message(), MakeMoveCommand.class);
-                    makeMove(moveCommand.getAuthToken(), moveCommand.getGameID(), moveCommand.getChessMove(), ctx.session);
+                    makeMove(moveCommand.getAuthToken(), moveCommand.getGameID(), moveCommand.getChessMove(), moveCommand.getColor(), ctx.session);
                 }
                 case RESIGN -> resign(command.getAuthToken(), command.getGameID(), ctx.session);
             }
@@ -115,8 +115,25 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
         String visitorName = null;
         try {
             visitorName = authDAO.getAuth(authToken).username();
+
+            if (color == null) {
+                GameData data = null;
+                data = gameDAO.getGame(id);
+                String white = data.whiteUsername();
+                String black = data.blackUsername();
+                if (visitorName.equals(white)) {
+                    color = "white";
+                } else if (visitorName.equals(black)) {
+                    color = "black";
+                } else {
+                    color = "observer";
+                }
+            }
+
+
             var message = String.format("%s (%s) left the game\n\n", visitorName, color.toLowerCase());
             var notification = new NotificationMessage(NotificationMessage.ServerMessageType.NOTIFICATION, message);
+
 
             GameData gameData = gameDAO.getGame(id);
             if (color.equalsIgnoreCase("white")){
@@ -137,17 +154,41 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
 
     }
 
-    private void makeMove(String authToken, Integer gameID, ChessMove move, Session session) throws IOException {
+    private void makeMove(String authToken, Integer gameID, ChessMove move, String color, Session session) throws IOException {
 
         try {
             GameData gameData = gameDAO.getGame(gameID);
             ChessGame game = gameData.game();
             ChessGame.TeamColor turn = game.getTeamTurn();
             String visitorName = authDAO.getAuth(authToken).username();
+
+            if (color == null) {
+                GameData data = null;
+                data = gameDAO.getGame(gameID);
+                String white = data.whiteUsername();
+                String black = data.blackUsername();
+                if (visitorName.equals(white)) {
+                    color = "white";
+                } else if (visitorName.equals(black)) {
+                    color = "black";
+                } else {
+                    color = "observer";
+                }
+            }
+
+            if (color.equalsIgnoreCase("white") && !(game.getTeamTurn() == ChessGame.TeamColor.WHITE)){
+                throw new InvalidMoveException("Error: invalid move, it is not your turn.\n");
+            } else if (color.equalsIgnoreCase("black") && !(game.getTeamTurn() == ChessGame.TeamColor.BLACK)){
+                throw new InvalidMoveException("Error: invalid move, it is not your turn.\n");
+            }
+
             String message = String.format("%s moved %s\n", visitorName, getMoveDescription(move, game));
             game.makeMove(move);
             gameDAO.updateGame(gameID, game);
-            connections.broadcast(gameID, new LoadGameMessage(ServerMessage.ServerMessageType.LOAD_GAME, game, message));
+            connections.broadcast(gameID, new LoadGameMessage(ServerMessage.ServerMessageType.LOAD_GAME, game, null));
+            connections.broadcast(gameID, session, new NotificationMessage(ServerMessage.ServerMessageType.NOTIFICATION, message));
+
+
 
             String opponentName = null;
             if (turn == ChessGame.TeamColor.WHITE) {
@@ -165,10 +206,10 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
             String newMessage = null;
             if (game.isInCheckmate(turn)) {
                 newMessage = String.format("\n%s is now in checkmate! %s wins, game is over.\n", opponentName, visitorName);
-                connections.broadcast(gameID, session, new NotificationMessage(ServerMessage.ServerMessageType.NOTIFICATION, newMessage));
+                connections.broadcast(gameID, new NotificationMessage(ServerMessage.ServerMessageType.NOTIFICATION, newMessage));
             } else if (game.isInCheck(turn)){
                 newMessage = String.format("\n%s is now in check!\n", opponentName);
-                connections.broadcast(gameID, session, new NotificationMessage(ServerMessage.ServerMessageType.NOTIFICATION, newMessage));
+                connections.broadcast(gameID, new NotificationMessage(ServerMessage.ServerMessageType.NOTIFICATION, newMessage));
             }
 
 

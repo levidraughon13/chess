@@ -352,7 +352,7 @@ public class InGameClient implements ServerMessageHandler {
             return "\nIt is not your turn\n";
         }
         ChessMove move = getMove(params);
-        ws.makeMove(authToken, gameID, move);
+        ws.makeMove(authToken, gameID, move, team);
         return "";
     }
 
