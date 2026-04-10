@@ -14,6 +14,7 @@ import model.AuthData;
 import model.GameData;
 import org.eclipse.jetty.websocket.api.Session;
 
+import org.jetbrains.annotations.NotNull;
 import websocket.commands.*;
 import websocket.messages.ErrorMessage;
 import websocket.messages.LoadGameMessage;
@@ -32,7 +33,7 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
     private final ConnectionManager connections = new ConnectionManager();
     private final AuthDAO authDAO;
     private final GameDAO gameDAO;
-    private Set<Integer> finishedGames = new HashSet<>();
+    private final Set<Integer> finishedGames = new HashSet<>();
 
 
     public WebSocketHandler(AuthDAO authDAO, GameDAO gameDAO) {
@@ -76,7 +77,7 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
     }
 
     @Override
-    public void handleClose(WsCloseContext ctx) {
+    public void handleClose(@NotNull WsCloseContext ctx) {
         finishedGames.clear();
         System.out.println("Websocket closed");
     }
@@ -90,7 +91,7 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
             }
             String visitorName = authData.username();
             if (color == null) {
-                GameData data = null;
+                GameData data;
                 data = gameDAO.getGame(id);
                 String white = data.whiteUsername();
                 String black = data.blackUsername();
@@ -105,7 +106,7 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
             var message = String.format("%s joined the game as %s\n\n", visitorName, color.toLowerCase());
             var notification = new NotificationMessage(NotificationMessage.ServerMessageType.NOTIFICATION, message);
             connections.broadcast(id, session, notification);
-            var loadGame = new LoadGameMessage(ServerMessage.ServerMessageType.LOAD_GAME, gameDAO.getGame(id).game(), null);
+            var loadGame = new LoadGameMessage(ServerMessage.ServerMessageType.LOAD_GAME, gameDAO.getGame(id).game());
             session.getRemote().sendString(new Gson().toJson(loadGame));
         }  catch (BadRequestException | SQLDataAccessException e) {
             ErrorMessage error = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, "Error: database error\n\n");
@@ -119,12 +120,12 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
 
 
     private void exit(String authToken, Integer id, String color, Session session) throws IOException {
-        String visitorName = null;
+        String visitorName;
         try {
             visitorName = authDAO.getAuth(authToken).username();
 
             if (color == null) {
-                GameData data = null;
+                GameData data;
                 data = gameDAO.getGame(id);
                 String white = data.whiteUsername();
                 String black = data.blackUsername();
@@ -149,7 +150,6 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
                 gameData = new GameData(gameData.gameID(), gameData.whiteUsername(), null, gameData.gameName(), gameData.game());
             }
 
-            var statement = "UPDATE games SET game=? WHERE gameID=?";
             gameDAO.updateGameData(id, gameData);
             connections.broadcast(id, session, notification);
             connections.remove(id, session);
@@ -175,7 +175,7 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
             String visitorName = authData.username();
 
             if (color == null) {
-                GameData data = null;
+                GameData data;
                 data = gameDAO.getGame(gameID);
                 String white = data.whiteUsername();
                 String black = data.blackUsername();
@@ -202,7 +202,7 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
             String message = String.format("%s moved %s\n", visitorName, getMoveDescription(move, game));
             game.makeMove(move);
             gameDAO.updateGame(gameID, game);
-            connections.broadcast(gameID, new LoadGameMessage(ServerMessage.ServerMessageType.LOAD_GAME, game, null));
+            connections.broadcast(gameID, new LoadGameMessage(ServerMessage.ServerMessageType.LOAD_GAME, game));
             connections.broadcast(gameID, session, new NotificationMessage(ServerMessage.ServerMessageType.NOTIFICATION, message));
 
 
@@ -220,7 +220,7 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
 
 
             turn = game.getTeamTurn();
-            String newMessage = null;
+            String newMessage;
             if (game.isInCheckmate(turn)) {
                 newMessage = String.format("\n%s is now in checkmate! %s wins, game is over.\n", opponentName, visitorName);
                 connections.broadcast(gameID, new NotificationMessage(ServerMessage.ServerMessageType.NOTIFICATION, newMessage));
@@ -261,11 +261,11 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
 
     private void resign(String authToken, Integer gameID, String color, Session session) throws IOException {
         try {
-            String visitorName = null;
+            String visitorName;
             visitorName = authDAO.getAuth(authToken).username();
 
             if (color == null) {
-                GameData data = null;
+                GameData data;
                 data = gameDAO.getGame(gameID);
                 String white = data.whiteUsername();
                 String black = data.blackUsername();

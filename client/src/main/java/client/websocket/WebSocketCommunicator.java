@@ -60,16 +60,6 @@ public class WebSocketCommunicator {
     }
 
 
-    public void observerJoin(String authToken, Integer gameID) throws IOException {
-        var command = new UserGameCommand(UserGameCommand.CommandType.CONNECT, authToken, gameID);
-        this.session.getBasicRemote().sendText(new Gson().toJson(command));
-    }
-
-    public void observerLeave(String authToken, Integer gameID) throws IOException {
-        var command = new UserGameCommand(UserGameCommand.CommandType.LEAVE, authToken, gameID);
-        this.session.getBasicRemote().sendText(new Gson().toJson(command));
-    }
-
     public void playerJoin(String authToken, Integer gameID, String color) throws IOException {
         var command = new PlayerJoinCommand(UserGameCommand.CommandType.CONNECT, authToken, gameID, color);
         this.session.getBasicRemote().sendText(new Gson().toJson(command));

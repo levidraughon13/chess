@@ -89,7 +89,7 @@ public class PostLogClient {
         }
 
         System.out.print("\nObserving game " + params[0] + "\n");
-        new InGameClient(server, "observer", authToken, username, id).run();
+        new InGameClient(server, "observer", authToken, id).run();
 
         return "\nLeft game\n";
     }
@@ -103,7 +103,7 @@ public class PostLogClient {
 
         server.joinGame(authToken, id, params[1].toUpperCase());
 
-        new InGameClient(server, params[1].toUpperCase(), authToken, username, id).run();
+        new InGameClient(server, params[1].toUpperCase(), authToken, id).run();
         return "\nGame exited\n";
     }
 
