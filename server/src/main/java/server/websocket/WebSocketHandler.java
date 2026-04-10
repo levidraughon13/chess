@@ -97,9 +97,7 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
             var loadGame = new LoadGameMessage(ServerMessage.ServerMessageType.LOAD_GAME, gameDAO.getGame(id).game());
             session.getRemote().sendString(new Gson().toJson(loadGame));
         }  catch (BadRequestException | SQLDataAccessException e) {
-            ErrorMessage error = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, "Error: database error\n\n");
-            String json = new Gson().toJson(error);
-            session.getRemote().sendString(json);
+            errorMessage("Error: database error\n\n", session);
         }
     }
 
@@ -145,9 +143,7 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
             connections.broadcast(id, session, notification);
             connections.remove(id, session);
         } catch (SQLDataAccessException|BadRequestException e) {
-            ErrorMessage error = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, "Error: database error\n\n");
-            String json = new Gson().toJson(error);
-            session.getRemote().sendString(json);
+            errorMessage("Error: database error\n\n", session);
         }
 
     }
@@ -210,13 +206,9 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
 
 
         } catch (InvalidMoveException e) {
-            ErrorMessage error = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, "Error: invalid move\n");
-            String json = new Gson().toJson(error);
-            session.getRemote().sendString(json);
+            errorMessage("Error: invalid move\n", session);
         } catch (BadRequestException | SQLDataAccessException e) {
-            ErrorMessage error = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, e.getMessage());
-            String json = new Gson().toJson(error);
-            session.getRemote().sendString(json);
+            errorMessage(e.getMessage(), session);
         }
     }
 
@@ -257,10 +249,14 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
             var message = String.format("%s has resigned, game is over.\n\n", visitorName);
             connections.broadcast(gameID, new NotificationMessage(ServerMessage.ServerMessageType.NOTIFICATION, message));
         } catch (SQLDataAccessException | BadRequestException e) {
-            ErrorMessage error = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, e.getMessage());
-            String json = new Gson().toJson(error);
-            session.getRemote().sendString(json);
+            errorMessage(e.getMessage(), session);
         }
 
+    }
+
+    private static void errorMessage(String e, Session session) throws IOException {
+        ErrorMessage error = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, e);
+        String json = new Gson().toJson(error);
+        session.getRemote().sendString(json);
     }
 }
