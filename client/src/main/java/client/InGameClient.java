@@ -87,6 +87,11 @@ public class InGameClient implements ServerMessageHandler {
     private String highlight(String[] params) throws BadRequestException {
         ChessPosition selected = getPosition(params);
 
+        ChessPiece start = game.getBoard().getPiece(selected);
+        if (start == null){
+            throw new BadRequestException("Error: given square has no piece\n");
+        }
+
         Collection<ChessMove> moves = game.validMoves(selected);
         if (moves.isEmpty()){
             return "No valid moves\n";
@@ -110,8 +115,22 @@ public class InGameClient implements ServerMessageHandler {
     }
 
     private void resign() throws IOException {
-        gameOver = true;
-        ws.resign(authToken, gameID, team);
+        Scanner scanner = new Scanner(System.in);
+
+        System.out.print("\nAre you sure you want to resign? Enter 'yes' to proceed (any other input will cancel the resign)\n");
+
+        String line = scanner.nextLine();
+
+        String[] tokens = line.toLowerCase().split(" ");
+        String cmd = (tokens.length > 0) ? tokens[0] : "help";
+
+        if (cmd.equalsIgnoreCase("yes")){
+            gameOver = true;
+            ws.resign(authToken, gameID, team);
+        }
+
+        System.out.print("\nResign canceled\n");
+
     }
 
     private String help() {
@@ -273,16 +292,23 @@ public class InGameClient implements ServerMessageHandler {
         String p1 = params[0].toLowerCase();
         String p2 = params[1].toLowerCase();
 
+        if (invalidSquareInput(p1) || invalidSquareInput(p2)){
+            throw new BadRequestException("Error: format input as example 'move e4 e7 *<promotion piece>*'\n");
+        }
+
         char p1c = p1.charAt(0);
         char p1r = p1.charAt(1);
         char p2c = p2.charAt(0);
         char p2r = p2.charAt(1);
+
+
 
         int col1 = p1c - 'a' + 1;
         int row1 = p1r - '0';
 
         int col2 = p2c - 'a' + 1;
         int row2 = p2r - '0';
+
 
         if (params.length == 3){
             ChessPiece promote = getPromote(params);
@@ -314,6 +340,10 @@ public class InGameClient implements ServerMessageHandler {
         }
         String p1 = params[0].toLowerCase();
 
+        if (invalidSquareInput(p1)){
+            throw new BadRequestException("Error: format input as example 'move e4 e7 *<promotion piece>*'\n");
+        }
+
 
         char p1c = p1.charAt(0);
         char p1r = p1.charAt(1);
@@ -322,5 +352,11 @@ public class InGameClient implements ServerMessageHandler {
         int row1 = p1r - '0';
 
         return new ChessPosition(row1, col1);
+    }
+
+    private boolean invalidSquareInput(String input) {
+        return input.length() != 2 ||
+                input.charAt(0) < 'a' || input.charAt(0) > 'h' ||
+                input.charAt(1) < '1' || input.charAt(1) > '8';
     }
 }

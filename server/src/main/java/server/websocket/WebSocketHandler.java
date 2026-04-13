@@ -180,8 +180,7 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
             connections.broadcast(gameID, new LoadGameMessage(ServerMessage.ServerMessageType.LOAD_GAME, game));
             connections.broadcast(gameID, session, new NotificationMessage(ServerMessage.ServerMessageType.NOTIFICATION, message));
 
-
-
+            turn = game.getTeamTurn();
             String opponentName = null;
             if (turn == ChessGame.TeamColor.WHITE) {
                 opponentName = gameData.whiteUsername();
@@ -192,9 +191,6 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
                 opponentName = "<other team>";
             }
 
-
-
-            turn = game.getTeamTurn();
             String newMessage;
             if (game.isInCheckmate(turn)) {
                 newMessage = String.format("\n%s is now in checkmate! %s wins, game is over.\n", opponentName, visitorName);
